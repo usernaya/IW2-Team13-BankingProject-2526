@@ -12,7 +12,7 @@ const config = {
   },
 
   url: 'https://usernaya.github.io',
-  baseUrl: '/IW2-Team13-BankingProject-2526/',
+  baseUrl: '/',
 
   organizationName: 'usernaya',
   projectName: 'IW2-Team13-BankingProject-2526',
@@ -76,17 +76,17 @@ const config = {
           {
             title: 'Documentatie',
             items: [
-              { label: 'Introductie', to: '/intro' },
-              { label: 'Architectuur', to: '/architectuur' },
-              { label: 'Payment Flow', to: '/po-flow' },
+              { label: 'Introductie', to: 'intro' },
+              { label: 'Architectuur', to: 'architectuur' },
+              { label: 'Payment Flow', to: 'po-flow' },
             ],
           },
           {
             title: 'API',
             items: [
-              { label: 'Accounts', to: '/accounts/list' },
-              { label: 'Payments', to: '/payments/new' },
-              { label: 'Errorcodes', to: '/errorcodes' },
+              { label: 'Accounts', to: 'accounts/list' },
+              { label: 'Payments', to: 'payments/new' },
+              { label: 'Errorcodes', to: 'errorcodes' },
             ],
           },
           {
