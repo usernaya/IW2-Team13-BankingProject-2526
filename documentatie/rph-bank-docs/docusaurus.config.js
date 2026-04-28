@@ -12,10 +12,10 @@ const config = {
   },
 
   url: 'https://usernaya.github.io',
-  baseUrl: '/IP2-Team13-BankingProject-2526/',
+  baseUrl: '/IW2-Team13-BankingProject-2526/',
 
   organizationName: 'usernaya',
-  projectName: 'IP2-Team13-BankingProject-2526',
+  projectName: 'IW2-Team13-BankingProject-2526',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -63,7 +63,7 @@ const config = {
             label: 'API Docs',
           },
           {
-            href: 'https://github.com/usernaya/IP2-Team13-BankingProject-2526',
+            href: 'https://github.com/usernaya/IW2-Team13-BankingProject-2526',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub Repository',
@@ -94,7 +94,7 @@ const config = {
             items: [
               {
                 label: 'GitHub Repository',
-                href: 'https://github.com/usernaya/IP2-Team13-BankingProject-2526',
+                href: 'https://github.com/usernaya/IW2-Team13-BankingProject-2526',
               },
             ],
           },
