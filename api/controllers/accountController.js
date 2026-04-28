@@ -5,12 +5,7 @@ import { generateBelgianIBAN } from "../utils/belgianIbanGenerator.js";
 
 export async function getAllAccounts(req, res) {
     const accounts = await Account.getAll();
-    res.status(200).json({
-        "ok":true,
-        "status":200,
-        "message":"Accounts succesvol opgehaald",
-        "data":accounts
-    });
+    res.status(200).json(accounts);
 }
 
 const requestFromIbanSchema = Joi.object({
