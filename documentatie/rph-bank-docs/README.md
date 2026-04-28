@@ -1,41 +1,52 @@
-# Website
+# RPH Bank — API Documentatie
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Deze documentatie werd ontwikkeld met **Docusaurus** en beschrijft alle API-endpoints en flows van het RPH Bank project.
 
-## Installation
+---
 
-```bash
-yarn
+## Online versie (aanbevolen)
+
+Voor de volledige en correcte ervaring (styling, navigatie en routing):
+
+[Online versie](https://rph-bank.vercel.app)
+
+---
+
+## Lokale versie (build)
+
+Een statische build van de documentatie is beschikbaar in de map:
+
+```
+/build
 ```
 
-## Local Development
+Let op:
+Bij het openen via `index.html` kunnen sommige stijlen of functionaliteiten beperkt zijn door browserrestricties. Docusaurus werkt optimaal via een lokale server.
+
+---
+
+## Lokaal draaien (optioneel)
+
+Indien gewenst kan de documentatie lokaal gestart worden met:
 
 ```bash
-yarn start
+npm install
+npm run serve
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+---
 
-## Build
+## Technologie
 
-```bash
-yarn build
-```
+* Docusaurus (static site generator)
+* React (intern door Docusaurus)
+* Markdown voor documentatie
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+---
 
-## Deployment
+## Team
 
-Using SSH:
+RPH Bank — Team 13
+PingFin 2026 — Odisee Toegepaste Informatica
 
-```bash
-USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+---
