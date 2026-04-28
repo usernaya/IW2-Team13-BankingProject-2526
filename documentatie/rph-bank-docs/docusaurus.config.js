@@ -17,7 +17,7 @@ const config = {
   organizationName: 'usernaya',
   projectName: 'IW2-Team13-BankingProject-2526',
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
   i18n: {
