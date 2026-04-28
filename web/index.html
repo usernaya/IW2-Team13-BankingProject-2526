@@ -4,7 +4,7 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>RPH — PingFin</title>
+   <title>SEPA Payments — PingFin</title>
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -13,124 +13,51 @@
 
 <body>
 
-   <!--CARD 1 — SEPA Payment Form -->
-   <div class="card">
-      <div class="img-logo">
-         <img alt="Logo" src="img/rph_logo.png">
-      </div>
-      <div class="card-title">RPH Banking</div>
 
-      <!-- Choose your Account — opties geladen via api.getAccounts() -->
+
+   <div class="card">
+      <div class="card-title">Betaling versturen</div>
+
+      <!-- Van rekening -->
       <div class="field">
-         <label for="from-account">Choose your Account:</label>
+         <label>Van rekening</label>
          <div class="select-wrap">
-            <select id="from-account" class="loading">
-               <!-- populated by main.js -->
+            <select>
             </select>
          </div>
       </div>
 
-      <!-- Amount -->
-      <div class="field">
-         <label for="amount">Enter amount (in EUR):</label>
-         <input type="number" id="amount" placeholder="0.00 €" min="0.1" max="500" step="0.1">
+      <!-- Bedrag + IBAN -->
+      <div class="row">
+         <div class="field">
+            <label>Bedrag (EUR)</label>
+            <div class="amount-wrap">
+               <input type="number" id="amount" placeholder="€" value="10" max="500">
+            </div>
+         </div>
+         <div class="field">
+            <label>IBAN begunstigde</label>
+            <input type="text" id="iban" >
+         </div>
       </div>
 
-      <!-- Beneficiary IBAN -->
-      <div class="field">
-         <label for="iban">Enter beneficiary's IBAN:</label>
-         <input type="text" id="iban" placeholder="e.g. BE68639007547034" maxlength="16">
+
+      <!-- Foutmelding -->
+      <div class="error-box" id="error-box">
+         <div class="error-text">
+         </div>
       </div>
 
-      <!-- Feedback (error / success) -->
-      <div class="feedback-box" id="feedback-box">
-         <div class="feedback-text"></div>
-      </div>
-
-      <!-- Action buttons — exact volgorde van mockup -->
+      <!-- Knoppen -->
       <div class="actions">
-         <button class="btn-primary" id="btn-send" type="button">Send Payment</button>
-         <button class="btn-primary" id="btn-random" type="button">Send 10 Random Orders</button>
-         <button class="btn-primary" id="btn-hide-data" type="button">Hide Data</button>
-         <button class="btn-primary" id="btn-hide-orders" type="button">Hide New Payment Orders</button>
-         <button class="btn-primary" id="btn-hide-members" type="button">Hide Members</button>
+         <button class="btn-primary" type="button">Betaling sturen</button>
+         <button class="btn-ghost" type="button">10 willekeurige orders</button>
       </div>
+
+      <hr>
+
    </div>
 
-   <!-- ════════════════════════════════════
-       CARD 2 — Fetched Data (accounts)
-       Kaarten gegenereerd door main.js → api.getAccounts()
-       ════════════════════════════════════ -->
-   <div class="card" id="section-data">
-      <div class="section-header">
-         <span class="section-title">Fetched Data</span>
-         <span class="section-count" id="accounts-count">—</span>
-      </div>
-
-      <!-- data-card elementen worden hier ingevoegd door main.js -->
-      <div class="accounts-grid" id="accounts-grid">
-         <!-- skeleton zichtbaar tot data geladen is -->
-      </div>
-   </div>
-
-   <!-- ════════════════════════════════════
-       CARD 3 — New Payment Orders
-       Rijen gegenereerd door main.js → api.getPaymentOrders()
-       ════════════════════════════════════ -->
-   <div class="card" id="section-orders">
-      <div class="section-header">
-         <span class="section-title">New Payment Orders</span>
-         <span class="section-count" id="orders-count">—</span>
-      </div>
-
-      <div class="table-wrap">
-         <table>
-            <thead>
-               <tr>
-                  <th scope="col">id</th>
-                  <th scope="col">amount</th>
-                  <th scope="col">msg</th>
-                  <th scope="col">datetime</th>
-                  <th scope="col">po_id</th>
-                  <th scope="col">account_id</th>
-               </tr>
-            </thead>
-            <tbody id="orders-body">
-               <!-- rijen worden ingevoegd door main.js -->
-            </tbody>
-         </table>
-      </div>
-   </div>
-
-   <!-- ════════════════════════════════════
-       CARD 4 — Members
-       Rijen gegenereerd door main.js → api.getMembers()
-       ════════════════════════════════════ -->
-   <div class="card" id="section-members">
-      <div class="section-header">
-         <span class="section-title">Members</span>
-         <span class="section-count" id="members-count">—</span>
-      </div>
-
-      <div class="table-wrap">
-         <table>
-            <thead>
-               <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Bic</th>
-                  <th scope="col">Bank</th>
-               </tr>
-            </thead>
-            <tbody id="members-body">
-               <!-- rijen worden ingevoegd door main.js -->
-            </tbody>
-         </table>
-      </div>
-   </div>
-
-   <footer>PingFin · IW2-G13 &copy; 2026</footer>
-
-   <script src="JS/main.js"></script>
 </body>
 
 </html>
