@@ -37,10 +37,10 @@ Elke betaling (**Payment Order - PO**) doorloopt deze flow:
 
 | Naam | Rol |
 |---|---|
-| Boutaarourte Aya | Backend / API / Project lead |
+| Boutaarourte Aya | Backend / API  |
 | Maalmi Yamine | Backend / Database |
 | Tenjiti Imane | Frontend / UI |
-| Vanschoenbeek Yelle | Testing / Documentatie |
+| Vanschoenbeek Yelle | Backend / API |
 
 **BIC:** `BMPBBEBB` | **Team:** 13 | **Coaches:** Sam Van Buggenhout & Jens Baetens
 
