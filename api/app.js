@@ -3,7 +3,12 @@ import fs from "node:fs/promises";
 import path, {dirname} from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+// dotenv
+import dotenv from "dotenv";
+dotenv.config();
+
 const app = express();
+const port = 8080
 
 app.use(express.json());
 
@@ -23,22 +28,24 @@ for (const version of versions) {
     }
 
     const routesFiles = await fs.readdir(versionPath);
+    routesFiles.sort();
     for (const file of routesFiles) {
-        if (!file.endsWith(".js")) continue;
-        
+        if (path.extname(file) !== ".js") continue;
+
         const routeName = file.replace(".js", "");
         const routePath = path.join(versionPath, file);
         const module = await import(pathToFileURL(routePath).href);
 
-        if (!module.default?.use) {
+        if (!module.default?.use || !module.default?.stack) {
             console.log(`${routePath} does not export an Express router (skipping file)...`);
             continue;
         }
 
         app.use(`/api/${version}/${routeName}`, module.default);
+        console.log(`Mounted: /api/${version}/${routeName} -> ${file}`)
     }
 }
 
-app.listen("3000", () => {
-    console.log("App is running on port 3000...")
+app.listen(port, () => {
+    console.log(`App is running on port ${port}`);
 });
