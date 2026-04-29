@@ -1,0 +1,54 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage
+.nyc_output
+
+# Build / misc
+lib-cov
+.grunt
+bower_components
+.lock-wscript
+build/Release
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Optional caches
+.npm
+.eslintcache
+.node_repl_history
+
+# Archives
+*.tgz
+
+# Yarn
+.yarn-integrity
+
+# ENV (BELANGRIJK)
+.env
+.env.local
+.env.development
+.env.production
+
+# Next.js (mag blijven)
+.next
+
+# Docker (VERPLICHT volgens guidelines)
+docker-compose.yml
+docker-compose.override.yml
+
+# OS
+.DS_Store
