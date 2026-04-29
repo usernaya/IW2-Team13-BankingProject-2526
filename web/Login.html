@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>RPH — Login</title>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="login-page">
+   <main class="card login-card" aria-labelledby="login-title">
+      <div class="img-logo login-logo">
+         <img alt="RPH Banking logo" src="img/rph_logo.png">
+      </div>
+
+      <br>
+      <p class="login-subtitle">Log in to your secure banking environment.</p>
+      <br>
+
+      <form class="login-form" action="index.html" method="get">
+         <div class="field">
+            <label for="client-id">ID:</label>
+            <input
+               type="text"
+               id="client-id"
+               name="client-id"
+               placeholder="e.g. RPH-000000"
+               autocomplete="username"
+               required
+               pattern="RPH-102938"
+               title="ID incorrect">
+         </div>
+         <div class="field">
+            <label for="password">Password:</label>
+            <input
+               type="password"
+               id="password"
+               name="password"
+               placeholder="Enter your password"
+               autocomplete="current-password"
+               required
+               pattern="1234"
+               title="Mot de passe incorrect">
+         </div>
+         <div class="feedback-box login-security visible success">
+            <span class="feedback-icon">✓</span>
+            <div class="feedback-text">Secure connection · Never share your banking credentials.</div>
+         </div>
+         <br>
+         <div class="actions login-actions">
+            <button class="btn-primary" type="submit">Log In</button>
+         </div>
+      </form>
+   </main>
+
+   <footer>PingFin · IW2-G13 &copy; 2026</footer>
+</body>
+
+</html>
