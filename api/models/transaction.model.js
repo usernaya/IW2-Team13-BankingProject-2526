@@ -3,7 +3,7 @@ import { pool } from "../db/db.js";
 export const Transaction = {
     async getAll() {
         const [data] = await pool.query(
-            `SELECT id, amount, datetime, po_id, account_id, isvalid, iscomplete
+            `SELECT id, amount, DATE_FORMAT(datetime, '%Y-%m-%d %H:%i:%s') AS datetime, po_id, account_id, isvalid, iscomplete
              FROM transactions
              ORDER BY datetime DESC`
         );
@@ -12,7 +12,7 @@ export const Transaction = {
 
     async getFromId(id) {
         const [data] = await pool.query(
-            `SELECT id, amount, datetime, po_id, account_id, isvalid, iscomplete
+            `SELECT id, amount, DATE_FORMAT(datetime, '%Y-%m-%d %H:%i:%s') AS datetime, po_id, account_id, isvalid, iscomplete
              FROM transactions WHERE id = ?`,
             [id]
         );
