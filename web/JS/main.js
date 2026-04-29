@@ -96,7 +96,9 @@ const dom = {
    hideMembersButton: document.querySelector("#btn-hide-members"),
    dataSection: document.querySelector("#section-data"),
    ordersSection: document.querySelector("#section-orders"),
-   membersSection: document.querySelector("#section-members")
+   membersSection: document.querySelector("#section-members"),
+   beneficiaryBank: document.querySelector("#beneficiary-bank"),
+   refreshBanksButton: document.querySelector("#btn-refresh-banks")
 };
 
 document.addEventListener("DOMContentLoaded", init);
@@ -133,6 +135,26 @@ function bindEvents() {
    dom.hideDataButton.addEventListener("click", () => toggleSection(dom.dataSection, dom.hideDataButton, "Data"));
    dom.hideOrdersButton.addEventListener("click", () => toggleSection(dom.ordersSection, dom.hideOrdersButton, "New Payment Orders"));
    dom.hideMembersButton.addEventListener("click", () => toggleSection(dom.membersSection, dom.hideMembersButton, "Members"));
+   dom.refreshBanksButton.addEventListener("click", handleRefreshBanks);
+}
+
+async function handleRefreshBanks() {
+   setButtonLoading(dom.refreshBanksButton, true);
+
+   try {
+      const members = await api.getMembers();
+
+      appState.members = members;
+      renderMembers(members);
+      renderBeneficiaryBanks(members);
+
+      showFeedback("success", "Banks refreshed successfully.");
+   } catch (error) {
+      showFeedback("error", getErrorMessage(error, "Banks could not be refreshed."));
+      console.error(error);
+   } finally {
+      setButtonLoading(dom.refreshBanksButton, false);
+   }
 }
 
 function renderLoadingState() {

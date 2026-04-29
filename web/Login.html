@@ -24,19 +24,33 @@
       <form class="login-form" action="index.html" method="get">
          <div class="field">
             <label for="client-id">ID:</label>
-            <input type="text" id="client-id" name="client-id" placeholder="e.g. RPH-102938" autocomplete="username" required>
+            <input
+               type="text"
+               id="client-id"
+               name="client-id"
+               placeholder="e.g. RPH-000000"
+               autocomplete="username"
+               required
+               pattern="RPH-102938"
+               title="ID incorrect">
          </div>
-
          <div class="field">
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <input
+               type="password"
+               id="password"
+               name="password"
+               placeholder="Enter your password"
+               autocomplete="current-password"
+               required
+               pattern="1234"
+               title="Mot de passe incorrect">
          </div>
-
          <div class="feedback-box login-security visible success">
             <span class="feedback-icon">✓</span>
             <div class="feedback-text">Secure connection · Never share your banking credentials.</div>
          </div>
-
+         <br>
          <div class="actions login-actions">
             <button class="btn-primary" type="submit">Log In</button>
          </div>

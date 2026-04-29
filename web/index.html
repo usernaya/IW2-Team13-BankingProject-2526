@@ -18,14 +18,17 @@
          <img alt="Logo" src="img/rph_logo.png">
          <button class="btn-primary" id="log-out" type="button" onclick="window.location.href='login.html'">Log Out</button>
       </div>
-      <div class="card-title">RPH Banking</div>
+      <div class="card-title">Banking App</div>
 
       <div class="field">
          <label for="beneficiary-bank">Beneficiary's Bank:</label>
-         <div class="select-wrap">
+         <div class="select-wrap bank-select-wrap">
             <select id="beneficiary-bank" class="loading">
                <!-- populated by main.js -->
             </select>
+            <button class="bank-refresh-icon" id="btn-refresh-banks" type="button" aria-label="Refresh banks">
+               ↻
+            </button>
          </div>
       </div>
 

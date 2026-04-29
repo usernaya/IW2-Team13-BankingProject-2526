@@ -13,7 +13,6 @@
    --text: #1a1a18;
    --text-muted: #7a7872;
    --text-hint: #b0ada6;
-   --accent: #1a1a18;
    --green: #2d6a4f;
    --green-light: #e8f4ed;
    --red: #a32d2d;
@@ -48,10 +47,16 @@ body {
    gap: 16px;
 }
 
+/* ── Logo row ── */
 .img-logo {
    display: flex;
    align-items: center;
    justify-content: space-between;
+}
+
+.img-logo img {
+   width: 50px;
+   height: 50px;
 }
 
 #log-out {
@@ -60,14 +65,8 @@ body {
    font-size: 11px;
 }
 
-.img-logo img {
-   text-align: left;
-   width: 50px;
-   height: 50px;
-}
-
 /* ════════════════════════════════════════
-   CARD — shared container
+   CARD
    ════════════════════════════════════════ */
 .card {
    width: 100%;
@@ -88,7 +87,7 @@ body {
 }
 
 /* ════════════════════════════════════════
-   SECTION HEADER (inside cards)
+   SECTION HEADER
    ════════════════════════════════════════ */
 .section-header {
    display: flex;
@@ -160,25 +159,42 @@ body {
    font-size: 13px;
 }
 
-/* Select chevron */
+/* Select + refresh button row */
 .select-wrap {
-   position: relative;
+   display: flex;
+   gap: 8px;
+   align-items: center;
 }
 
-.select-wrap::after {
-   content: '▾';
-   position: absolute;
-   right: 12px;
-   top: 50%;
-   transform: translateY(-50%);
-   font-size: 11px;
+.select-wrap select {
+   flex: 1;
+}
+
+/* Refresh icon button */
+.bank-refresh-icon {
+   width: 22px;
+   height: 22px;
+   border: none;
+   border-radius: 50%;
+   background: transparent;
    color: var(--text-muted);
-   pointer-events: none;
+   font-size: 15px;
+   line-height: 1;
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-shrink: 0;
+   transition: background .15s, color .15s, transform .15s;
 }
 
-/* ── Skeleton loading state ── */
-.field select.loading,
-.field input.loading {
+.bank-refresh-icon:hover {
+   background: var(--bg);
+   color: var(--text);
+}
+
+/* ── Skeleton loading ── */
+.field select.loading {
    color: transparent;
    background: linear-gradient(90deg, #ebebea 25%, #f5f5f4 50%, #ebebea 75%);
    background-size: 200% 100%;
@@ -197,7 +213,7 @@ body {
 }
 
 /* ════════════════════════════════════════
-   BUTTONS ROW
+   BUTTONS
    ════════════════════════════════════════ */
 .actions {
    display: flex;
@@ -229,18 +245,13 @@ body {
    opacity: .7;
 }
 
-
-
-
-/* Loading spinner on button */
 .btn-primary.loading {
    opacity: .6;
    pointer-events: none;
-   position: relative;
 }
 
 /* ════════════════════════════════════════
-   FEEDBACK — error / success
+   FEEDBACK
    ════════════════════════════════════════ */
 .feedback-box {
    display: none;
@@ -291,12 +302,8 @@ body {
    background: var(--green);
 }
 
-.feedback-text strong {
-   font-family: var(--mono);
-}
-
 /* ════════════════════════════════════════
-   FETCHED DATA — account cards
+   ACCOUNT CARDS
    ════════════════════════════════════════ */
 .accounts-grid {
    display: grid;
@@ -316,7 +323,6 @@ body {
    border-color: var(--border-strong);
 }
 
-/* skeleton state */
 .data-card.skeleton .data-card__iban,
 .data-card.skeleton .data-card__balance {
    background: linear-gradient(90deg, #ebebea 25%, #f5f5f4 50%, #ebebea 75%);
@@ -346,7 +352,7 @@ body {
 }
 
 /* ════════════════════════════════════════
-   TABLES — Payment Orders & Members
+   TABLES
    ════════════════════════════════════════ */
 .table-wrap {
    overflow-x: auto;
@@ -384,51 +390,20 @@ tbody tr:hover {
 }
 
 tbody td {
-   padding: 10px 10px;
+   padding: 10px;
    color: var(--text-muted);
    font-family: var(--mono);
    font-size: 12px;
    vertical-align: middle;
 }
 
-/* Column variants */
-tbody td.td-primary {
-   color: var(--text);
-   font-weight: 500;
-}
-
+tbody td.td-primary,
 tbody td.td-amount {
    color: var(--text);
    font-weight: 500;
 }
 
-/* Status pill */
-.pill {
-   display: inline-block;
-   font-size: 10px;
-   font-family: var(--sans);
-   font-weight: 500;
-   padding: 2px 8px;
-   border-radius: 20px;
-}
-
-.pill.ok {
-   background: var(--green-light);
-   color: var(--green);
-}
-
-.pill.pending {
-   background: #fef9ec;
-   color: #8a6400;
-   border: 1px solid #f5d97a;
-}
-
-.pill.failed {
-   background: var(--red-light);
-   color: var(--red);
-}
-
-/* Skeleton row */
+/* Skeleton rows */
 .skeleton-row td span {
    display: block;
    height: 10px;
@@ -445,6 +420,31 @@ tbody td.td-amount {
    color: var(--text-hint);
    font-size: 13px;
    font-family: var(--sans);
+}
+
+/* ════════════════════════════════════════
+   LOGIN PAGE
+   ════════════════════════════════════════ */
+.login-page {
+   justify-content: center;
+}
+
+.login-card {
+   max-width: 400px;
+}
+
+.login-logo {
+   justify-content: center;
+}
+
+.login-subtitle {
+   font-size: 13px;
+   color: var(--text-muted);
+   text-align: center;
+}
+
+.login-actions {
+   justify-content: center;
 }
 
 /* ════════════════════════════════════════
