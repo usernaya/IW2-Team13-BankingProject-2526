@@ -10,7 +10,7 @@ export async function getAllAccounts(req, res) {
 }
 
 export async function getFromIban(req, res) {
-  const iban = req.params.iban;
+  const iban = req.validated.params.iban;
   const account = await Account.getFromIban(iban);
 
   if (!account || account === "") {

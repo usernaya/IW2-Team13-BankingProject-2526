@@ -13,6 +13,6 @@ const router = express.Router();
 router.get("/outgoing", getAllOutgoingPaymentOrders);
 router.get("/incoming", getAllIncomingPaymentOrders);
 router.get("/pending", getAllPendingPaymentOrders);
-router.post("/", validate(newPaymentOrderSchema), createNewPaymentOrder);
+router.post("/", validate(newPaymentOrderSchema, "body"), createNewPaymentOrder);
 
 export default router;

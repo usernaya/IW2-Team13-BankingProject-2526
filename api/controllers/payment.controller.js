@@ -21,7 +21,7 @@ export async function getAllPendingPaymentOrders(req, res) {
 }
 
 export async function createNewPaymentOrder(req, res) {
-  const { po_amount, po_message, oa_id, ba_id, bb_id } = req.body;
+  const { po_amount, po_message, oa_id, ba_id, bb_id } = req.validated.body;
   const bic = process.env.BIC;
 
   const id = generatePaymentOrderId();

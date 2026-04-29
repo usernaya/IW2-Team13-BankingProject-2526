@@ -16,8 +16,10 @@ export function validate(schema, source = "body") {
         })),
       });
     }
+    
+    req.validated = req.validated || {};
+    req.validated[source] = value;
 
-    req[source] = value;
     next();
   };
 }

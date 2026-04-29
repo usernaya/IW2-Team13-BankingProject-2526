@@ -11,6 +11,6 @@ const router = express.Router();
 
 router.get("/", getAllAccounts);
 router.post("/", createNewAccount);
-router.get("/:iban", validate(getFromIbanSchema), getFromIban);
+router.get("/:iban", validate(getFromIbanSchema,"params"), getFromIban);
 
 export default router;
