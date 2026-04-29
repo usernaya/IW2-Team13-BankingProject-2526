@@ -1,2 +1,2 @@
--- WEB UI -> Paymenth order -> PO_NEW
+-- WEB UI -> Payment order -> PO_NEW
 -- WEB UI OF TIMER -> PO_NEW -> PO_OUT -> CLEARING BANK

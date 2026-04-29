@@ -1,89 +1,22 @@
 import { pool } from "../db/db.js";
+import { handleIncomingPaymentOrders } from "../services/cb/paymentOrderSyncService.js";
 
-export const Paymenth = {
-    async createPoOut(
-        id,
-        paymenthAmount,
-        paymenthMessage,
-        paymenthDatetime,
-        originBankId,
-        originAccountId,
-        originBankCode,
-        originBankDateTime,
-        beneficiaryBankId,
-        beneficiaryAccountId,
-    ) {
+export const Payment = {
+    async createPoOut(rows) {
         await pool.query(`INSERT INTO po_new (po_id, po_amount, po_message, po_datetime, ob_id, oa_id, ob_code, ob_datetime, bb_id, ba_id)
             VALUES (?,?,?,?,?,?,?,?,?,?)`,
-            [
-                id,
-                paymenthAmount,
-                paymenthMessage,
-                paymenthDatetime,
-                originBankId,
-                originAccountId,
-                originBankCode,
-                originBankDateTime,
-                beneficiaryBankId,
-                beneficiaryAccountId,
-            ]);
+            [rows]);
     },
 
-    async createPoIn(
-        id,
-        paymenthAmount,
-        paymenthMessage,
-        paymenthDatetime,
-        originBankId,
-        originAccountId,
-        originBankCode,
-        originBankDateTime,
-        beneficiaryBankId,
-        beneficiaryAccountId,
-        clearingBankCode,
-        clearingBankDatetime
-    ) {
+    async createPoIn(rows) {
         await pool.query(`INSERT INTO po_new (po_id, po_amount, po_message, po_datetime, ob_id, oa_id, ob_code, ob_datetime, bb_id, ba_id, cb_code, cb_datetime)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-            [
-                id,
-                paymenthAmount,
-                paymenthMessage,
-                paymenthDatetime,
-                originBankId,
-                originAccountId,
-                originBankCode,
-                originBankDateTime,
-                beneficiaryBankId,
-                beneficiaryAccountId,
-                clearingBankCode,
-                clearingBankDatetime
-            ]);
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, rows);
     },
 
-    async createPoNew(
-        id,
-        paymenthAmount,
-        paymenthMessage,
-        paymenthDatetime,
-        originBankId,
-        originAccountId,
-        beneficiaryBankId,
-        beneficiaryAccountId,
-    ) {
+    async createPoNew(rows) {
         await pool.query(`
             INSERT INTO po_new (po_id, po_amount, po_message, po_datetime, ob_id, oa_id, ba_id, bb_id)
-            VALUES (?,?,?,?,?,?,?,?)`,
-            [
-                id,
-                paymenthAmount,
-                paymenthMessage,
-                paymenthDatetime,
-                originBankId,
-                originAccountId,
-                beneficiaryAccountId,
-                beneficiaryBankId
-            ]);
+            VALUES (?,?,?,?,?,?,?,?)`, rows);
     },
 
     async getOutgoing() {
@@ -115,5 +48,42 @@ export const Paymenth = {
         await pool.query(`
             DELETE FROM po_new
             WHERE po_id = ?`, [id]);
+    },
+
+    async removePoNewRecord(id) {
+        await pool.query(`
+            DELETE FROM po_new
+            WHERE po_id = ?
+            `, [id]);
+    },
+
+    async removePoInRecord(id) {
+        await pool.query(`
+            DELETE FROM po_new
+            WHERE po_id = ?
+            `, [id]);
+    },
+
+    async removePoOutRecord(id) {
+        await pool.query(`
+            DELETE FROM po_new
+            WHERE po_id = ?
+            `, [id]);
+    }, 
+
+    async getPaymentOrder(id) {
+        const data = await pool.query(`
+            SELECT * FROM po_out
+            WHERE po_id = ?
+            `, [id]);
+
+        return data[0];
+    },
+
+    async clearNewPaymentOrders(ids) {
+        await pool.query(`
+            DELETE FROM po_new
+            WHERE id=?
+            `, ids);
     }
 }

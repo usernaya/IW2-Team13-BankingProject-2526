@@ -43,5 +43,20 @@ WHERE a.id = ?;
         `, [iban]);
 
         return data[0];
+    },
+
+    async transferMoney(senderId, receiverId, amount) {
+        await pool.query(`
+            START TRANSACTION;
+            UPDATE accounts SET balance = balance - ? WHERE id = ?;
+            UPDATE accounts SET balance = balance + ? WHERE id = ?;
+            COMMIT;
+        `, [amount, senderId, amount, receiverId]);
+    },
+
+    async deductMoney(iban, amount) {
+        await pool.query(`
+            UPDATE accounts SET balance = balance - ? WHERE id = ?
+            `, [amount, iban]);
     }
 }
