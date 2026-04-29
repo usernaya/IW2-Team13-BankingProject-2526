@@ -6,7 +6,23 @@ export async function getOutgoingAcknowledgments(req, res) {
     res.status(200).json(outgoing);
 }
 
-export async function handleNewAcknowledgments() {
-    await handleIncomingAcknowledgments();
-    res.status(200).json({message: "All new incoming acknowledgments are handled."});
+export async function handleNewAcknowledgments(req, res) {
+    try {
+        const result = await handleIncomingAcknowledgments();
+        res.status(200).json({
+            ok: true,
+            status: 200,
+            code: null,
+            message: "Incoming acknowledgments fetched and handled.",
+            data: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            ok: false,
+            status: 500,
+            code: "ACK_FETCH_FAILED",
+            message: error.message,
+            data: null
+        });
+    }
 }

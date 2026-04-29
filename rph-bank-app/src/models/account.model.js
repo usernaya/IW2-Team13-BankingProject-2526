@@ -3,8 +3,14 @@ import { pool } from "../db/db.js";
 export const Account = {
     async getAll() {
         const [data] = await pool.query(
-            `SELECT id, balance
-            FROM accounts`
+            `SELECT 
+                a.id,
+                a.balance,
+                (a.balance
+                    - (SELECT COALESCE(SUM(po_amount), 0) FROM po_out WHERE oa_id = a.id)
+                    - (SELECT COALESCE(SUM(po_amount), 0) FROM po_new WHERE oa_id = a.id)
+                ) AS available_balance
+            FROM accounts a`
         );
 
         return data;
@@ -46,17 +52,36 @@ WHERE a.id = ?;
     },
 
     async transferMoney(senderId, receiverId, amount) {
-        await pool.query(`
-            START TRANSACTION;
-            UPDATE accounts SET balance = balance - ? WHERE id = ?;
-            UPDATE accounts SET balance = balance + ? WHERE id = ?;
-            COMMIT;
-        `, [amount, senderId, amount, receiverId]);
+        const connection = await pool.getConnection();
+
+        try {
+            await connection.beginTransaction();
+            await connection.query(
+                `UPDATE accounts SET balance = balance - ? WHERE id = ?`,
+                [amount, senderId]
+            );
+            await connection.query(
+                `UPDATE accounts SET balance = balance + ? WHERE id = ?`,
+                [amount, receiverId]
+            );
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     },
 
     async deductMoney(iban, amount) {
         await pool.query(`
             UPDATE accounts SET balance = balance - ? WHERE id = ?
+            `, [amount, iban]);
+    },
+
+    async addMoney(iban, amount) {
+        await pool.query(`
+            UPDATE accounts SET balance = balance + ? WHERE id = ?
             `, [amount, iban]);
     }
 }

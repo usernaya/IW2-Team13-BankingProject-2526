@@ -34,5 +34,5 @@ export async function fetchBanks(refresh = false) {
 
 export async function isValidBank(bic) {
     const banks = await fetchBanks();
-    return banks.some((b) => b.bic === bic);
+    return banks.some((b) => (b.bic || b.id) === bic);
 }

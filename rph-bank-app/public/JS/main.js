@@ -1,9 +1,12 @@
 const API_BASE_URL = "/api/v1";
+const OWN_BANK_BIC = "BMPBBEBB";
 
 const ENDPOINTS = {
    accounts: "/accounts",
+   banks: "/banks",
    paymentOrders: "/payments/pending",
    createPaymentOrder: "/payments",
+   fetchAcknowledgments: "/acknowledgments/handle",
 
    pingfinToken: "/token",
    pingfinPoOut: "/po_out",
@@ -28,6 +31,12 @@ const api = {
       return normalizePaymentOrders(extractData(response));
    },
 
+   async getBanks(refresh = false) {
+      const query = refresh ? "?refresh=true" : "";
+      const response = await request(`${ENDPOINTS.banks}${query}`);
+      return normalizeMembers(extractData(response));
+   },
+
    async createPaymentOrder(paymentOrder) {
       const payload = {
          account_id: paymentOrder.account_id,
@@ -39,7 +48,8 @@ const api = {
          oa_id: paymentOrder.account_id,
          po_amount: paymentOrder.amount,
          po_message: paymentOrder.msg,
-         ba_id: paymentOrder.iban
+         ba_id: paymentOrder.iban,
+         bb_id: paymentOrder.bb_id
       };
 
       const response = await request(ENDPOINTS.createPaymentOrder, {
@@ -48,6 +58,12 @@ const api = {
       });
 
       return normalizePaymentOrder(extractData(response));
+   },
+
+   async fetchAcknowledgments() {
+      return request(ENDPOINTS.fetchAcknowledgments, {
+         method: "POST"
+      });
    },
 
    async getPingfinOutgoingOrders() {
@@ -83,6 +99,7 @@ const dom = {
    membersBody: document.querySelector("#members-body"),
    membersCount: document.querySelector("#members-count"),
    sendButton: document.querySelector("#btn-send"),
+   fetchAcksButton: document.querySelector("#btn-fetch-acks"),
    randomButton: document.querySelector("#btn-random"),
    hideDataButton: document.querySelector("#btn-hide-data"),
    hideOrdersButton: document.querySelector("#btn-hide-orders"),
@@ -106,7 +123,7 @@ async function init() {
    api.getPaymentOrders()
 ]);
 
-      const members = normalizeMembers(accounts);
+      const members = await api.getBanks();
 
       appState.accounts = accounts;
 appState.paymentOrders = orders;
@@ -126,18 +143,34 @@ renderBeneficiaryBanks(members);
 
 function bindEvents() {
    dom.sendButton.addEventListener("click", handleSendPayment);
+   dom.fetchAcksButton.addEventListener("click", handleFetchAcknowledgments);
    dom.randomButton.addEventListener("click", handleRandomOrders);
    dom.hideDataButton.addEventListener("click", () => toggleSection(dom.dataSection, dom.hideDataButton, "Data"));
    dom.hideOrdersButton.addEventListener("click", () => toggleSection(dom.ordersSection, dom.hideOrdersButton, "New Payment Orders"));
-   dom.hideMembersButton.addEventListener("click", () => toggleSection(dom.membersSection, dom.hideMembersButton, "Members"));
+   dom.hideMembersButton.addEventListener("click", () => toggleSection(dom.membersSection, dom.hideMembersButton, "Banks"));
    dom.refreshBanksButton.addEventListener("click", handleRefreshBanks);
+   dom.amount.addEventListener("blur", formatAmountInput);
+   dom.amount.addEventListener("change", formatAmountInput);
+}
+
+async function reloadAccountsAndOrders() {
+   const [accounts, orders] = await Promise.all([
+      api.getAccounts(),
+      api.getPaymentOrders()
+   ]);
+
+   appState.accounts = accounts;
+   appState.paymentOrders = orders;
+   renderAccountSelect(accounts);
+   renderAccounts(accounts);
+   renderPaymentOrders(orders);
 }
 
 async function handleRefreshBanks() {
    setButtonLoading(dom.refreshBanksButton, true);
 
    try {
-      const members = appState.accounts;
+      const members = await api.getBanks(true);
 
       appState.members = members;
       renderMembers(members);
@@ -165,7 +198,7 @@ function renderLoadingState() {
    `;
 
    dom.ordersBody.innerHTML = createSkeletonRows(3, 6);
-   dom.membersBody.innerHTML = createSkeletonRows(2, 3);
+   dom.membersBody.innerHTML = createSkeletonRows(2, 2);
 }
 
 function clearLoadingState() {
@@ -205,8 +238,8 @@ function renderAccounts(accounts) {
    dom.accountsGrid.innerHTML = accounts.map((account) => `
       <div class="data-card">
          <div class="data-card__iban">${escapeHtml(account.iban)}</div>
-         <div class="data-card__balance">${formatCurrency(account.balance)}</div>
-         <div class="data-card__label">Available balance</div>
+         <div class="data-card__balance">${formatCurrency(account.currentBalance)}</div>
+         <div class="data-card__label">Balance</div>
       </div>
    `).join("");
 }
@@ -235,7 +268,7 @@ function renderMembers(members) {
    dom.membersCount.textContent = members.length;
 
    if (!members.length) {
-      dom.membersBody.innerHTML = `<tr><td colspan="3" class="empty-state">No members found.</td></tr>`;
+      dom.membersBody.innerHTML = `<tr><td colspan="2" class="empty-state">No banks found.</td></tr>`;
       return;
    }
 
@@ -277,8 +310,7 @@ async function handleSendPayment() {
 
    try {
       await api.createPaymentOrder(paymentOrder);
-      appState.paymentOrders = await api.getPaymentOrders();
-      renderPaymentOrders(appState.paymentOrders);
+      await reloadAccountsAndOrders();
       showFeedback("success", "Payment order created successfully.");
       clearPaymentForm();
    } catch (error) {
@@ -289,9 +321,34 @@ async function handleSendPayment() {
    }
 }
 
+async function handleFetchAcknowledgments() {
+   setButtonLoading(dom.fetchAcksButton, true);
+
+   try {
+      const result = await api.fetchAcknowledgments();
+      await reloadAccountsAndOrders();
+
+      const summary = result.data
+         ? `${result.data.handled} handled, ${result.data.skipped} skipped.`
+         : "Acknowledgments fetched.";
+
+      showFeedback("success", summary);
+   } catch (error) {
+      showFeedback("error", getErrorMessage(error, "Acknowledgments could not be fetched."));
+      console.error(error);
+   } finally {
+      setButtonLoading(dom.fetchAcksButton, false);
+   }
+}
+
 async function handleRandomOrders() {
    if (!appState.accounts.length) {
       showFeedback("error", "No account available to create random orders.");
+      return;
+   }
+
+   if (!appState.members.length) {
+      showFeedback("error", "No beneficiary bank available to create random orders.");
       return;
    }
 
@@ -305,12 +362,12 @@ async function handleRandomOrders() {
             account_id: account.id,
             amount: Number((Math.random() * 499 + 1).toFixed(2)),
             iban: createRandomBelgianIban(),
-            msg: "Random order"
+            msg: "Random order",
+            bb_id: randomItem(appState.members).bic
          });
       }
 
-      appState.paymentOrders = await api.getPaymentOrders();
-      renderPaymentOrders(appState.paymentOrders);
+      await reloadAccountsAndOrders();
       showFeedback("success", "10 random payment orders created.");
    } catch (error) {
       showFeedback("error", getErrorMessage(error, "Random payment orders could not be created."));
@@ -321,11 +378,14 @@ async function handleRandomOrders() {
 }
 
 function getPaymentFormData() {
+   const beneficiaryIban = dom.iban.value.trim().toUpperCase();
+
    return {
       account_id: dom.fromAccount.value,
       amount: Number(dom.amount.value),
-      iban: dom.iban.value.trim().toUpperCase(),
-      msg: "SEPA payment"
+      iban: beneficiaryIban,
+      msg: "SEPA payment",
+      bb_id: isLocalAccount(beneficiaryIban) ? OWN_BANK_BIC : dom.beneficiaryBank.value
    };
 }
 
@@ -336,6 +396,14 @@ function validatePaymentOrder(paymentOrder) {
 
    if (!paymentOrder.amount || paymentOrder.amount < 0.1 || paymentOrder.amount > 500) {
       return "Amount must be between 0.10 EUR and 500 EUR.";
+   }
+
+   if (!paymentOrder.bb_id) {
+      return "Please choose a beneficiary bank.";
+   }
+
+   if (paymentOrder.bb_id === getOwnBankCode() && paymentOrder.account_id === paymentOrder.iban) {
+      return "Originator account and beneficiary account cannot be the same.";
    }
 
    if (!isValidBelgianIban(paymentOrder.iban)) {
@@ -402,7 +470,9 @@ function normalizeAccounts(accounts) {
    return accounts.map((account) => ({
       id: account.id || account.iban,
       iban: account.id, 
-      balance: Number(account.balance || 0)
+      balance: Number(account.balance ?? 0),
+      currentBalance: Number(account.balance ?? 0),
+      availableBalance: Number(account.available_balance ?? account.balance ?? 0)
    }));
 }
 
@@ -411,20 +481,24 @@ function normalizePaymentOrders(orders) {
 }
 
 function normalizePaymentOrder(order, index = 0) {
+   if (Array.isArray(order)) {
+      return order.length ? normalizePaymentOrder(order[0], index) : null;
+   }
+
    return {
       id: order.id || index + 1,
       amount: Number(order.amount ?? order.po_amount ?? 0),
       msg: order.msg || order.po_message || "-",
-      datetime: order.datetime || order.po_datetime || "",
+      datetime: formatDateTime(order.datetime || order.po_datetime || ""),
       po_id: order.po_id || order.id || "-",
       account_id: order.account_id || order.oa_id || "-"
    };
 }
 
-function normalizeMembers(accounts) {
-   return accounts.map(acc => ({
-      bic: acc.id,               
-      bank: "RPH Bank"
+function normalizeMembers(members) {
+   return members.map(member => ({
+      bic: member.bic || member.id,
+      bank: member.name || member.bank || member.bic || member.id
    }));
 }
 
@@ -443,17 +517,58 @@ function formatCurrency(value) {
    }).format(value);
 }
 
+function formatAmountInput() {
+   const amount = Number(dom.amount.value);
+
+   if (Number.isFinite(amount) && amount > 0) {
+      dom.amount.value = amount.toFixed(2);
+   }
+}
+
+function formatDateTime(value) {
+   if (!value) return "";
+
+   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) {
+      return value;
+   }
+
+   const date = new Date(value);
+
+   if (Number.isNaN(date.getTime())) {
+      return value;
+   }
+
+   const pad = (number) => String(number).padStart(2, "0");
+
+   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 function isValidBelgianIban(iban) {
    return /^BE\d{14}$/.test(iban);
 }
 
 function createRandomBelgianIban() {
-   const digits = Array.from({ length: 14 }, () => Math.floor(Math.random() * 10)).join("");
-   return `BE${digits}`;
+   const countryCode = "BE";
+   const bban = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join("");
+   const converted = `${bban}${countryCode}00`
+      .split("")
+      .map((char) => Number.isNaN(Number(char)) ? String(char.charCodeAt(0) - 55) : char)
+      .join("");
+   const checkDigits = String(98n - (BigInt(converted) % 97n)).padStart(2, "0");
+
+   return `${countryCode}${checkDigits}${bban}`;
 }
 
 function randomItem(items) {
    return items[Math.floor(Math.random() * items.length)];
+}
+
+function getOwnBankCode() {
+   return OWN_BANK_BIC;
+}
+
+function isLocalAccount(iban) {
+   return appState.accounts.some((account) => account.id === iban);
 }
 
 function getErrorMessage(error, fallback) {

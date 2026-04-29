@@ -1,5 +1,5 @@
 const secretBankCode = process.env.CB_SECRET_KEY;
-const cbBaseApiUrl = process.env.CB_API_BASE_URL;
+const cbBaseApiUrl = (process.env.CB_URL || process.env.CB_API_BASE_URL || "https://stevenop.be/pingfin/api/v2/").replace(/\/$/, "");
 const bic = process.env.BIC;
 let token = null;
 let tokenPromise = null;
@@ -46,9 +46,13 @@ async function getToken(forceRefresh = false) {
 export async function request(path, options = {}, isRetry = false) {
     // If its a retry due to 401, the token should be force refreshed
     const token = await getToken(isRetry);
+    const body = options.body && typeof options.body !== "string"
+        ? JSON.stringify(options.body)
+        : options.body;
 
     const res = await fetch(`${cbBaseApiUrl}${path}`, {
         ...options,
+        body,
         headers: {
             ...options.headers,
             Authorization: `Bearer ${token}`,

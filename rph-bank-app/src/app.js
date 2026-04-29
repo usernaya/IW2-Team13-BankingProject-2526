@@ -1,23 +1,22 @@
+import "dotenv/config";
 import express from "express";
 import fs from "node:fs/promises";
 import path, { dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-
-
-// dotenv
-import dotenv from "dotenv";
-dotenv.config();
-
-
-
+import pingfinCompatibilityRouter from "./routes/pingfinCompatibility.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(express.static("public"));
+app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Serveer de frontend static files
+app.use(express.static(path.join(__dirname, "../public")));
+
+app.use("/api", pingfinCompatibilityRouter);
 
 const versionsPath = path.join(__dirname, "routes");
 const versions = await fs.readdir(versionsPath);
@@ -27,7 +26,6 @@ for (const version of versions) {
     const stats = await fs.lstat(versionPath);
 
     if (!stats.isDirectory()) {
-        console.error("[ERROR] invalid item in routes directory.");
         continue;
     }
 

@@ -6,6 +6,12 @@ import { generatePaymentOrderId } from "../services/paymentOrderIdGenerator.js";
 import { fetchBanks, isValidBank } from "../services/cb/bankDirectoryService.js";
 import { handleIncomingPaymentOrders, sendOutgoingPaymentOrders } from "../services/cb/paymentOrderSyncService.js";
 
+function formatDateTime(date) {
+  const pad = (number) => String(number).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 export async function getAllOutgoingPaymentOrders(req, res) {
   const outgoing = await Payment.getOutgoing();
   res.status(200).json(outgoing);
@@ -27,9 +33,11 @@ export async function createNewPaymentOrder(req, res) {
 
   const id = generatePaymentOrderId();
   const date = new Date();
+  const beneficiaryAccount = await Account.getFromIban(ba_id);
+  const isInternalPayment = bb_id === bic || Boolean(beneficiaryAccount);
 
   // Check if its a valid bank
-  const valid = await isValidBank(bb_id);
+  const valid = isInternalPayment || await isValidBank(bb_id);
   if (!valid) {
     return res.status(400).json({
       message: `Bank with code: "${bb_id}" does not exist.`
@@ -50,22 +58,32 @@ export async function createNewPaymentOrder(req, res) {
     })
   }
 
-  if (bb_id === bic) {
+  if (isInternalPayment) {
+    if (oa_id === ba_id) {
+      return res.status(409).json({
+        message: "Originator account and beneficiary account cannot be the same for an internal payment."
+      });
+    }
+
+    if (!beneficiaryAccount) {
+      return res.status(404).json({
+        message: `Beneficiary account with iban: "${ba_id}" is not found.`
+      });
+    }
+
     await Account.transferMoney(oa_id, ba_id, po_amount);
     // ADD LOG INTERNAL TRANSFER
   } else {
     await Payment.createPoNew([
-      {
-        po_id: id,
-        po_amount: po_amount,
-        po_message: po_message,
-        ob_datetime: date,
-        ob_code: bic,
-        oa_id: oa_id,
-        bb_id: bb_id,
-        ba_id: ba_id,
-      }
-    ]);
+    id,
+    po_amount,
+    po_message,
+    date,
+    bic,
+    oa_id,
+    ba_id,
+    bb_id,
+]);
     // ADD LOG EXTERNAL TRANSFER
   }
 
@@ -73,25 +91,26 @@ export async function createNewPaymentOrder(req, res) {
     po_id: id,
     amount: po_amount,
     message: po_message,
-    datetime: date,
+    datetime: formatDateTime(date),
     ob_id: bic,
     oa_id: oa_id,
-    bb_id: bb_id,
+    bb_id: isInternalPayment ? bic : bb_id,
     ba_id: ba_id,
   });
 }
 
 export async function sendNewPayments(req, res) {
-  const result = await sendOutgoingPaymentOrders();
-
-  if (result.ok) {
+  try {
+    const result = await sendOutgoingPaymentOrders();
     res.status(201).json({
-      message:"Outgoing payments are send to the clearing bank."
-    })
-  } else {
+      message: "Outgoing payments are sent to the clearing bank.",
+      result
+    });
+  } catch (error) {
     res.status(500).json({
-      message:"Something went wrong while trying to send the payments to the clearing bank."
-    })
+      message: "Something went wrong while trying to send the payments to the clearing bank.",
+      error: error.message
+    });
   }
 }
 

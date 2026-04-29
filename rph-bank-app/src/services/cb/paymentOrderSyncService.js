@@ -17,21 +17,27 @@ export async function handleIncomingPaymentOrders() {
         throw new Error(`[${incoming.status}] ${incoming.result}`,);
     }
 
+    const paymentOrders = incoming.data ?? [];
     const acknowledgments = [];
-
-    const bic = process.env.BIC;
     const date = new Date().toISOString();
 
-    incoming.data.forEach(async (po) => {
-        po.date = date;
+    for (const po of paymentOrders) {
+        po.bb_datetime = date;
+
         if (!IBAN.isValid(po.ba_id)) {
             po.bb_code = 2002;
         } else {
             const account = await Account.getFromIban(po.ba_id);
             po.bb_code = account ? 2000 : 2001;
+
+            if (account) {
+                await Account.addMoney(po.ba_id, po.po_amount);
+                await Payment.createPoIn(po);
+            }
         }
+
         acknowledgments.push(po);
-    });
+    }
 
     await Acknowledgment.createOutgoing(acknowledgments);
 }
@@ -49,6 +55,7 @@ export async function sendOutgoingPaymentOrders() {
     }));
 
     const response = await request("/po_in", {
+        method: "POST",
         body: payload
     });
 
@@ -60,7 +67,7 @@ export async function sendOutgoingPaymentOrders() {
 
     const ids = newPaymentOrders.map((po) => po.po_id);
     
-    await Payment.createPoOut(newPaymentOrders);
+    await Payment.createPoOut(payload);
     await Payment.clearNewPaymentOrders(ids);
 
     return result;
