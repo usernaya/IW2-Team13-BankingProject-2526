@@ -49,8 +49,15 @@ body {
 }
 
 .img-logo {
-   max-width: 100%;
-   height: auto;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+}
+
+#log-out {
+   flex: none;
+   padding: 7px 12px;
+   font-size: 11px;
 }
 
 .img-logo img {
@@ -125,6 +132,7 @@ body {
 
 .field select,
 .field input[type="text"],
+.field input[type="password"],
 .field input[type="number"] {
    width: 100%;
    padding: 9px 12px;
@@ -220,6 +228,9 @@ body {
 .btn-primary:active {
    opacity: .7;
 }
+
+
+
 
 /* Loading spinner on button */
 .btn-primary.loading {
