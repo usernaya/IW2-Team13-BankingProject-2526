@@ -27,5 +27,21 @@ export const Account = {
             VALUES 
             (?)
             `, [iban]);
+    },
+
+    async calculateAvailableBalance(iban) {
+        const [data] = await pool.query(`
+SELECT 
+    a.id, 
+    a.balance, 
+    (a.balance 
+      - (SELECT COALESCE(SUM(po_amount), 0) FROM po_out WHERE oa_id = a.id)
+      - (SELECT COALESCE(SUM(po_amount), 0) FROM po_new WHERE oa_id = a.id)
+    ) AS available_balance
+FROM accounts a
+WHERE a.id = ?;
+        `, [iban]);
+
+        return data[0];
     }
 }
