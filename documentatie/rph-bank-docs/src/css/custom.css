@@ -1,0 +1,66 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #1a2744;
+  --ifm-color-primary-dark: #151f36;
+  --ifm-color-primary-darker: #111a2e;
+  --ifm-color-primary-darkest: #0d1424;
+  --ifm-color-primary-light: #1f2f52;
+  --ifm-color-primary-lighter: #243460;
+  --ifm-color-primary-lightest: #2a3b6e;
+  --ifm-font-family-base: 'IBM Plex Sans', sans-serif;
+  --ifm-font-family-monospace: 'IBM Plex Mono', monospace;
+  --ifm-code-font-size: 13px;
+  --ifm-navbar-background-color: #1a2744;
+  --ifm-navbar-link-color: #ffffff;
+  --ifm-footer-background-color: #1a2744;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+.navbar__brand { border-right: 1px solid rgba(255,255,255,0.15); padding-right: 1rem; margin-right: 1rem; }
+.navbar__logo { height: 32px; }
+.navbar__title { color: #ffffff; font-weight: 600; }
+.navbar__link { color: rgba(255,255,255,0.85) !important; }
+.navbar__link:hover { color: #d4a820 !important; }
+
+/* GET / POST badges */
+.badge-get {
+  background: #e6f7f1;
+  color: #0a7c54;
+  border: 1px solid #a3d9c5;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.badge-post {
+  background: #e8f0fd;
+  color: #1a5fb4;
+  border: 1px solid #9dbff5;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.auth-required {
+  background: #fdf8e1;
+  border: 1px solid #f0d060;
+  border-left: 4px solid #b8960c;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #7a6000;
+  margin-bottom: 1rem;
+}

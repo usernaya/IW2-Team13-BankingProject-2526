@@ -1,0 +1,187 @@
+{
+  "info": {
+    "_postman_id": "8815323a-344a-4c3e-b23d-5ec3dc6feb4c",
+    "name": "Banking",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "41769727"
+  },
+  "item": [
+    {
+      "name": "Create bearer token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"bic\":\"BMPBBEBB\",\r\n    \"secret_key\":\"xxxxx\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://stevenop.be/pingfin/api/v2/token",
+          "protocol": "https",
+          "host": [
+            "stevenop",
+            "be"
+          ],
+          "path": [
+            "pingfin",
+            "api",
+            "v2",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PO OUT",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"data\": [\r\n        {\r\n            \"po_id\" : \"random_generated_ID_by_OB\",\r\n\t\t\t\"po_amount\" : \"PO_amount\",\r\n\t\t\t\"po_message\" : \"PO_message\",\r\n\t\t\t\"po_datetime\" : \"data_and_time_PO_created\",\r\n\t\t\t\"ob_id\" : \"BIC_code_of_OB\",\r\n\t\t\t\"oa_id\" : \"IBAN_of_OA\",\r\n\t\t\t\"ob_code\" : \"code_generated_by_OB\",\r\n\t\t\t\"ob_datetime\" : \"date_and_time_of_most_recent_OB_action\",\r\n\t\t\t\"bb_id\" : \"BIC_code_of_BB\",\r\n\t\t\t\"ba_id\" : \"IBAN_of_BA\",\r\n\t\t\t\"cb_code\" : \"code_generated_by_CB\",\r\n\t\t\t\"cb_datetime\" : \"date_and_time_of_most_recent_CB_action\",\r\n        }\r\n    ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://stevenop.be/pingfin/api/v2/po_out",
+          "protocol": "https",
+          "host": [
+            "stevenop",
+            "be"
+          ],
+          "path": [
+            "pingfin",
+            "api",
+            "v2",
+            "po_out"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PO IN",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\t\"data\" : [\r\n\t\t{\r\n\t\t\t\"po_id\" : \"BMPBBEBB_UkVDRVBUMg==\",\r\n\t\t\t\"po_amount\" : \"50\",\r\n\t\t\t\"po_message\" : \"RANDOM GENERATED MESSAGE\",\r\n\t\t\t\"po_datetime\" : \"2026-04-27 16:33:00\",\r\n\t\t\t\"ob_id\" : \"BMPBBEBB\",\r\n\t\t\t\"oa_id\" : \"BE3333\",\r\n\t\t\t\"ob_code\" : \"EXT-99\",\r\n\t\t\t\"ob_datetime\" : \"2026-04-27 16:33:00\",\r\n\t\t\t\"bb_id\" : \"BNAGBEBB\",\r\n\t\t\t\"ba_id\" : \"BE1111\"\r\n\t\t}\r\n\t]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://stevenop.be/pingfin/api/v2/po_in",
+          "protocol": "https",
+          "host": [
+            "stevenop",
+            "be"
+          ],
+          "path": [
+            "pingfin",
+            "api",
+            "v2",
+            "po_in"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ACK IN",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"data\": [\r\n        \t{\r\n\t\t\t    \"po_id\" : \"random_generated_ID_by_OB\",\r\n\t\t\t    \"po_amount\" : \"PO_amount\",\r\n\t\t\t    \"po_message\" : \"PO_message\",\r\n\t\t\t    \"po_datetime\" : \"data_and_time_PO_created\",\r\n\t\t\t    \"ob_id\" : \"BIC_code_of_OB\",\r\n\t\t\t    \"oa_id\" : \"IBAN_of_OA\",\r\n\t\t\t    \"ob_code\" : \"code_generated_by_OB\",\r\n\t\t\t    \"ob_datetime\" : \"date_and_time_of_most_recent_OB_action\",\r\n\t\t\t    \"bb_id\" : \"BIC_code_of_BB\",\r\n\t\t\t    \"ba_id\" : \"IBAN_of_BA\",\r\n\t\t    }\r\n    ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://stevenop.be/pingfin/api/v2/ack_in",
+          "protocol": "https",
+          "host": [
+            "stevenop",
+            "be"
+          ],
+          "path": [
+            "pingfin",
+            "api",
+            "v2",
+            "ack_in"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ACK OUT",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "TEST",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "xxxxx",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
