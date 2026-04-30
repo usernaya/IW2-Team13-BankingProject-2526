@@ -58,13 +58,22 @@ document.addEventListener("DOMContentLoaded", () => {
 function bindTabs() {
   const initialTab = normalizeTab(location.hash.replace(/^#/, "") || "overview");
   setActiveTab(initialTab, false);
+  loadTabData(initialTab);
 
   tabButtons.forEach((button) => {
-    button.addEventListener("click", () => setActiveTab(button.dataset.tab || "overview"));
+    button.addEventListener("click", () => {
+      const tab = button.dataset.tab || "overview";
+      setActiveTab(tab);
+      loadTabData(tab);
+    });
   });
 
   tabJumpButtons.forEach((button) => {
-    button.addEventListener("click", () => setActiveTab(button.dataset.tabJump || "overview"));
+    button.addEventListener("click", () => {
+      const tab = button.dataset.tabJump || "overview";
+      setActiveTab(tab);
+      loadTabData(tab);
+    });
   });
 }
 
@@ -81,6 +90,21 @@ function setActiveTab(tab, updateHash = true) {
 
   if (updateHash) {
     history.replaceState(null, "", `#${activeTab}`);
+  }
+}
+
+function loadTabData(tab) {
+  switch (normalizeTab(tab)) {
+    case "pending":
+      return loadPendingPayments();
+    case "outgoing":
+      return loadOutgoingPayments();
+    case "logs":
+      return loadLogs();
+    case "acks":
+      return loadAcknowledgments();
+    default:
+      return Promise.resolve();
   }
 }
 
