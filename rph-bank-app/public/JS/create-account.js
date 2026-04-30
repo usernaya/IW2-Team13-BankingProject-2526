@@ -44,7 +44,7 @@ async function createAccount(balance) {
       headers: {
          "Content-Type": "application/json"
       },
-      body: JSON.stringify({ balance })
+      body: JSON.stringify({ balans: balance })
    });
 
    const data = await response.json();
@@ -53,7 +53,11 @@ async function createAccount(balance) {
       throw new Error(data.message || data.error || `Request failed: ${response.status}`);
    }
 
-   return data;
+   return {
+      iban: data.iban,
+      balance: Number(data.balans ?? data.balance ?? 0),
+      message: data.message,
+   };
 }
 
 function renderCreatedAccount(account) {

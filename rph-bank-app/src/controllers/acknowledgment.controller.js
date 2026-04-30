@@ -1,28 +1,46 @@
 import { Acknowledgment } from "../models/acknowledgment.model.js";
-import { handleIncomingAcknowledgments } from "../services/cb/acknowledgmentSyncService.js";
+import {
+  handleIncomingAcknowledgments,
+  sendOutgoingAcknowledgments as sendOutgoingAcknowledgmentsService,
+} from "../services/cb/acknowledgmentSyncService.js";
+import { sendSuccess } from "../utils/response.js";
 
 export async function getOutgoingAcknowledgments(req, res) {
-    const outgoing = await Acknowledgment.getOutgoing();
-    res.status(200).json(outgoing);
+  const outgoing = await Acknowledgment.getOutgoing();
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Outgoing acknowledgments fetched successfully.",
+    data: outgoing,
+  });
+}
+
+export async function getIncomingAcknowledgments(req, res) {
+  const incoming = await Acknowledgment.getIncoming();
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Incoming acknowledgments fetched successfully.",
+    data: incoming,
+  });
 }
 
 export async function handleNewAcknowledgments(req, res) {
-    try {
-        const result = await handleIncomingAcknowledgments();
-        res.status(200).json({
-            ok: true,
-            status: 200,
-            code: null,
-            message: "Incoming acknowledgments fetched and handled.",
-            data: result
-        });
-    } catch (error) {
-        res.status(500).json({
-            ok: false,
-            status: 500,
-            code: "ACK_FETCH_FAILED",
-            message: error.message,
-            data: null
-        });
-    }
+  const processed = await handleIncomingAcknowledgments();
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Incoming acknowledgments processed successfully.",
+    data: processed,
+  });
+}
+
+export async function sendOutgoingAcknowledgments(req, res) {
+  const result = await sendOutgoingAcknowledgmentsService();
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Outgoing acknowledgments sent successfully.",
+    data: result.data,
+  });
 }

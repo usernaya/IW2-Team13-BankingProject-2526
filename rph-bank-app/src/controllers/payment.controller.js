@@ -1,30 +1,45 @@
 import { Payment } from "../models/payment.model.js";
 import { Account } from "../models/account.model.js";
-
-import { newPaymentOrderSchema } from "../schemas/payment.schemas.js";
+import { Log } from "../models/log.model.js";
+import { sendSuccess, sendFailure } from "../utils/response.js";
+import { formatDateTime } from "../utils/formatDate.js";
 import { generatePaymentOrderId } from "../services/paymentOrderIdGenerator.js";
-import { fetchBanks, isValidBank } from "../services/cb/bankDirectoryService.js";
-import { handleIncomingPaymentOrders, sendOutgoingPaymentOrders } from "../services/cb/paymentOrderSyncService.js";
-
-function formatDateTime(date) {
-  const pad = (number) => String(number).padStart(2, "0");
-
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-}
+import { isValidBank } from "../services/cb/bankDirectoryService.js";
+import {
+  handleIncomingPaymentOrders,
+  sendOutgoingPaymentOrders,
+} from "../services/cb/paymentOrderSyncService.js";
+import { LogTypes } from "../codes/logTypes.js";
+import { ObCodes } from "../codes/obCodes.js";
 
 export async function getAllOutgoingPaymentOrders(req, res) {
   const outgoing = await Payment.getOutgoing();
-  res.status(200).json(outgoing);
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Outgoing payment orders fetched successfully.",
+    data: outgoing,
+  });
 }
 
 export async function getAllIncomingPaymentOrders(req, res) {
   const incoming = await Payment.getIncoming();
-  res.status(200).json(incoming);
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Incoming payment orders fetched successfully.",
+    data: incoming,
+  });
 }
 
 export async function getAllPendingPaymentOrders(req, res) {
   const pending = await Payment.getPending();
-  res.status(200).json(pending);
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Pending payment orders fetched successfully.",
+    data: pending,
+  });
 }
 
 export async function createNewPaymentOrder(req, res) {
@@ -32,91 +47,130 @@ export async function createNewPaymentOrder(req, res) {
   const bic = process.env.BIC;
 
   const id = generatePaymentOrderId();
-  const date = new Date();
-  const beneficiaryAccount = await Account.getFromIban(ba_id);
-  const isInternalPayment = bb_id === bic || Boolean(beneficiaryAccount);
+  const date = formatDateTime(new Date());
 
   // Check if its a valid bank
-  const valid = isInternalPayment || await isValidBank(bb_id);
+  const valid = await isValidBank(bb_id);
   if (!valid) {
-    return res.status(400).json({
-      message: `Bank with code: "${bb_id}" does not exist.`
+    const logDate = formatDateTime(new Date());
+    await Log.createEntry({
+      datetime: logDate,
+      message: LogTypes.OB_VALIDATION_FAIL.message,
+      type: "OB_VALIDATION_FAIL",
+      code: LogTypes.OB_VALIDATION_FAIL.code,
+      po_id: id,
+      po_amount,
+      po_message,
+      po_datetime: date,
+      ob_id: bic,
+      oa_id,
+      bb_id,
+      ba_id,
+    }).catch(() => {});
+
+    return sendFailure(res, {
+      status: 400,
+      code: ObCodes.OB_INVALID_BIC.code,
+      message: ObCodes.OB_INVALID_BIC.message,
+      data: null,
     });
   }
 
   const response = await Account.calculateAvailableBalance(oa_id);
 
   if (!response) {
-    return res.status(404).json({
-      "message": `Account with iban: "${oa_id}" is not found.`
-    })
+    return sendFailure(res, {
+      status: 404,
+      code: ObCodes.OB_UNKNOWN_OA.code,
+      message: ObCodes.OB_UNKNOWN_OA.message,
+      data: null,
+    });
   } else if (po_amount > response.available_balance) {
-    return res.status(409).json({
-      "message": `Not enough available balance for account with iban: "${oa_id}"`,
-      "available_balance": Number(response.available_balance),
-      "requested_amount": po_amount
-    })
+    return sendFailure(res, {
+      status: 409,
+      code: ObCodes.OB_INSUFFICIENT_FUNDS.code,
+      message: ObCodes.OB_INSUFFICIENT_FUNDS.message,
+      data: null,
+    });
   }
 
-  if (isInternalPayment) {
-    if (oa_id === ba_id) {
-      return res.status(409).json({
-        message: "Originator account and beneficiary account cannot be the same for an internal payment."
-      });
-    }
-
-    if (!beneficiaryAccount) {
-      return res.status(404).json({
-        message: `Beneficiary account with iban: "${ba_id}" is not found.`
-      });
-    }
-
-    await Account.transferMoney(oa_id, ba_id, po_amount);
-    // ADD LOG INTERNAL TRANSFER
+  if (bb_id === bic) {
+    await Account.transferMoney(oa_id, ba_id, po_amount, id);
+    await Log.createEntry({
+      datetime: date,
+      message: LogTypes.TX_SUCCESS.message,
+      type: "TX_SUCCESS",
+      code: LogTypes.TX_SUCCESS.code,
+      po_id: id,
+      po_amount,
+      po_message,
+      po_datetime: date,
+      ob_id: bic,
+      oa_id,
+      ob_code: LogTypes.TX_SUCCESS.code,
+      ob_datetime: date,
+      bb_id,
+      ba_id,
+      bb_code: LogTypes.TX_SUCCESS.code,
+      bb_datetime: date,
+    });
   } else {
     await Payment.createPoNew([
-    id,
-    po_amount,
-    po_message,
-    date,
-    bic,
-    oa_id,
-    ba_id,
-    bb_id,
-]);
-    // ADD LOG EXTERNAL TRANSFER
+      [id, po_amount, po_message, date, bic, oa_id, bb_id, ba_id],
+    ]);
+    await Log.createEntry({
+      datetime: date,
+      message: LogTypes.PO_SENT.message,
+      type: "PO_SENT",
+      code: LogTypes.PO_SENT.code,
+      po_id: id,
+      po_amount,
+      po_message,
+      po_datetime: date,
+      ob_id: bic,
+      oa_id,
+      ob_code: ObCodes.OB_OK?.code ?? null,
+      ob_datetime: date,
+      bb_id,
+      ba_id,
+      bb_code: null,
+      bb_datetime: null,
+    });
   }
 
-  res.status(201).json({
-    po_id: id,
-    amount: po_amount,
-    message: po_message,
-    datetime: formatDateTime(date),
-    ob_id: bic,
-    oa_id: oa_id,
-    bb_id: isInternalPayment ? bic : bb_id,
-    ba_id: ba_id,
+  return sendSuccess(res, {
+    status: 201,
+    code: null,
+    message: "Payment order created successfully.",
+    data: {
+      po_id: id,
+      amount: po_amount,
+      message: po_message,
+      datetime: date,
+      ob_id: bic,
+      oa_id,
+      bb_id,
+      ba_id,
+    },
   });
 }
 
 export async function sendNewPayments(req, res) {
-  try {
-    const result = await sendOutgoingPaymentOrders();
-    res.status(201).json({
-      message: "Outgoing payments are sent to the clearing bank.",
-      result
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Something went wrong while trying to send the payments to the clearing bank.",
-      error: error.message
-    });
-  }
+  await sendOutgoingPaymentOrders();
+  return sendSuccess(res, {
+    status: 201,
+    code: null,
+    message: "Outgoing payments sent to the clearing bank.",
+    data: null,
+  });
 }
 
 export async function handleNewPayments(req, res) {
-  await handleIncomingPaymentOrders()
-  res.status(200).json({
-    message:"Successfully handled incoming payment orders."
-  })
+  await handleIncomingPaymentOrders();
+  return sendSuccess(res, {
+    status: 200,
+    code: null,
+    message: "Incoming payment orders processed successfully.",
+    data: null,
+  });
 }

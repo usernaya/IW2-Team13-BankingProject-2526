@@ -5,18 +5,23 @@ import {
   getAllOutgoingPaymentOrders,
   getAllPendingPaymentOrders,
   sendNewPayments,
+  handleNewPayments,
 } from "../../controllers/payment.controller.js";
 import { newPaymentOrderSchema } from "../../schemas/payment.schemas.js";
 import { validate } from "../../middleware/validate.js";
-import { handleIncomingPaymentOrders } from "../../services/cb/paymentOrderSyncService.js";
+import { asyncHandler } from "../../middleware/asyncHandler.js";
 
 const router = express.Router();
 
-router.get("/outgoing", getAllOutgoingPaymentOrders);
-router.get("/incoming", getAllIncomingPaymentOrders);
-router.get("/pending", getAllPendingPaymentOrders);
-router.post("/", validate(newPaymentOrderSchema, "body"), createNewPaymentOrder);
-router.post("/send", sendNewPayments);
-router.post("/handle", handleIncomingPaymentOrders);
+router.get("/outgoing", asyncHandler(getAllOutgoingPaymentOrders));
+router.get("/incoming", asyncHandler(getAllIncomingPaymentOrders));
+router.get("/pending", asyncHandler(getAllPendingPaymentOrders));
+router.post(
+  "/",
+  validate(newPaymentOrderSchema, "body"),
+  asyncHandler(createNewPaymentOrder),
+);
+router.post("/send", asyncHandler(sendNewPayments));
+router.post("/handle", asyncHandler(handleNewPayments));
 
 export default router;

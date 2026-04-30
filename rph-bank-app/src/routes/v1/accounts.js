@@ -4,7 +4,7 @@ import {
   getAllAccounts,
   getFromIban,
 } from "../../controllers/account.controller.js";
-import { createAccountSchema, getFromIbanSchema } from "../../schemas/account.schemas.js";
+import { getFromIbanSchema, createAccountSchema } from "../../schemas/account.schemas.js";
 import { validate } from "../../middleware/validate.js";
 
 const router = express.Router();

@@ -6,5 +6,5 @@ export const getFromIbanSchema = Joi.object({
 });
 
 export const createAccountSchema = Joi.object({
-  balance: Joi.number().precision(2).min(0).max(9999999999999.99).default(0),
+  balans: Joi.number().min(0).optional(),
 });

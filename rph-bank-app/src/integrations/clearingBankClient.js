@@ -1,5 +1,5 @@
 const secretBankCode = process.env.CB_SECRET_KEY;
-const cbBaseApiUrl = (process.env.CB_URL || process.env.CB_API_BASE_URL || "https://stevenop.be/pingfin/api/v2/").replace(/\/$/, "");
+const cbBaseApiUrl = process.env.CB_API_BASE_URL;
 const bic = process.env.BIC;
 let token = null;
 let tokenPromise = null;
@@ -20,13 +20,12 @@ async function getToken(forceRefresh = false) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        bic,
+        bic: bic,
         secret_key: secretBankCode,
       }),
     });
 
     if (!response.ok) {
-      tokenPromise = null;
       throw new Error(`Token fetch failed: ${response.status}`);
     }
 
@@ -44,25 +43,21 @@ async function getToken(forceRefresh = false) {
 }
 
 export async function request(path, options = {}, isRetry = false) {
-    // If its a retry due to 401, the token should be force refreshed
-    const token = await getToken(isRetry);
-    const body = options.body && typeof options.body !== "string"
-        ? JSON.stringify(options.body)
-        : options.body;
+  // If its a retry due to 401, the token should be force refreshed
+  const token = await getToken(isRetry);
 
-    const res = await fetch(`${cbBaseApiUrl}${path}`, {
-        ...options,
-        body,
-        headers: {
-            ...options.headers,
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-        },
-    });
+  const res = await fetch(`${cbBaseApiUrl}${path}`, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
-    if (!isRetry && res.status === 401) {
-        return await request(path, options, true);
-    }
+  if (!isRetry && res.status === 401) {
+    return await request(path, options, true);
+  }
 
-    return res;
+  return res;
 }

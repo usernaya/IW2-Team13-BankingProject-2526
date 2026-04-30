@@ -1,8 +1,10 @@
 import express from "express";
-import { getAllLogs } from "../../controllers/log.controller.js";
+import { getAllLogs, getLogsByType } from "../../controllers/log.controller.js";
+import { asyncHandler } from "../../middleware/asyncHandler.js";
 
 const router = express.Router();
 
-router.get("/", getAllLogs);
+router.get("/", asyncHandler(getAllLogs));
+router.get("/type/:type", asyncHandler(getLogsByType));
 
 export default router;

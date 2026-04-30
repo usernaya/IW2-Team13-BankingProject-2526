@@ -1,9 +1,15 @@
 import express from "express";
-import { getAllTransactions, getTransactionFromId } from "../../controllers/transaction.controller.js";
+import {
+  getAllTransactions,
+  getFailedTransactions,
+  getOutstandingPayments,
+} from "../../controllers/transaction.controller.js";
+import { asyncHandler } from "../../middleware/asyncHandler.js";
 
 const router = express.Router();
 
-router.get("/", getAllTransactions);
-router.get("/:id", getTransactionFromId);
+router.get("/", asyncHandler(getAllTransactions));
+router.get("/failed", asyncHandler(getFailedTransactions));
+router.get("/outstanding", asyncHandler(getOutstandingPayments));
 
 export default router;
