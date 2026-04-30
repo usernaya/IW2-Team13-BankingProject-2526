@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPH Bank Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img src="img/rph_logo.png" alt="RPH logo">
+      <div class="brand-copy">
+        <h1>RPH Banking</h1>
+        <p>Reliable. Professional. Human.</p>
+      </div>
+    </div>
+    <nav class="top-actions">
+      <a class="button secondary" href="overview.html">Overview</a>
+      <a class="button secondary" href="create-account.html">New Account</a>
+      <a class="button secondary" href="index.html">Log Out</a>
+    </nav>
+  </header>
+
+  <nav class="section-tabs" aria-label="Dashboard tabs">
+    <button class="tab-button is-active" type="button" data-tab="overview">Overview</button>
+    <button class="tab-button" type="button" data-tab="payments">Payments</button>
+    <button class="tab-button" type="button" data-tab="accounts">Accounts</button>
+    <button class="tab-button" type="button" data-tab="banks">Banks</button>
+    <button class="tab-button" type="button" data-tab="pending">Pending</button>
+    <button class="tab-button" type="button" data-tab="outgoing">Outgoing</button>
+    <button class="tab-button" type="button" data-tab="acks">ACKs</button>
+    <button class="tab-button" type="button" data-tab="logs">Logs</button>
+  </nav>
+
+  <main class="dashboard-shell">
+    <section class="tab-panel" data-tab-panel="overview">
+      <section class="dashboard-hero">
+        <div class="hero-card hero-card--dashboard">
+          <span class="eyebrow">Live operations</span>
+          <h2>Banking actions, status, and logs in separate tabs.</h2>
+          <p>The dashboard now keeps each information area on its own tab, so you do not need to scroll through everything at once.</p>
+
+          <div class="hero-actions">
+            <button class="button" type="button" data-tab-jump="payments">Create payment</button>
+            <button class="button secondary" type="button" data-tab-jump="accounts">View accounts</button>
+          </div>
+        </div>
+
+        <div class="hero-metrics hero-metrics--dashboard">
+          <div class="hero-stat">
+            <strong id="accounts-count-hero">0</strong>
+            <span>loaded accounts</span>
+          </div>
+          <div class="hero-stat">
+            <strong id="banks-count-hero">0</strong>
+            <span>registered banks</span>
+          </div>
+          <div class="hero-stat">
+            <strong id="pending-count-hero">0</strong>
+            <span>pending orders</span>
+          </div>
+          <div class="hero-stat">
+            <strong id="logs-count-hero">0</strong>
+            <span>latest logs</span>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-panel" data-tab-panel="payments" hidden>
+      <section class="panel payment-panel">
+        <div class="panel-heading">
+          <h2>Create Payment Order</h2>
+          <button class="button secondary" id="refresh-all" type="button">Refresh All</button>
+        </div>
+
+        <form id="payment-form" class="form-grid">
+          <label>
+            From account
+            <select id="from-account" required>
+              <option value="">Loading accounts...</option>
+            </select>
+          </label>
+
+          <label>
+            Beneficiary bank
+            <select id="beneficiary-bic" required>
+              <option value="">Loading banks...</option>
+            </select>
+          </label>
+
+          <label>
+            Beneficiary IBAN
+            <input id="beneficiary-iban" type="text" maxlength="34" placeholder="BE68639007547034" required>
+          </label>
+
+          <label>
+            Amount
+            <input id="amount" type="number" min="0.01" max="500" step="0.01" placeholder="0.00" required>
+          </label>
+
+          <label class="full-width">
+            Message
+            <input id="message" type="text" minlength="5" value="SEPA payment" required>
+          </label>
+
+          <div class="actions full-width">
+            <button class="button" type="submit">Create Payment</button>
+            <button class="button secondary" id="send-payments" type="button">Send Payments</button>
+            <button class="button secondary" id="handle-payments" type="button">Handle Payments</button>
+            <button class="button secondary" id="refresh-banks" type="button">Refresh Banks</button>
+          </div>
+        </form>
+
+        <div id="feedback" class="feedback loading">Loading dashboard data...</div>
+      </section>
+    </section>
+
+    <section class="tab-panel" data-tab-panel="accounts" hidden>
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Accounts</h2>
+          <span id="accounts-count" class="count">0</span>
+        </div>
+        <div id="accounts-grid" class="accounts-grid">
+          <p class="empty">Loading accounts...</p>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-panel" data-tab-panel="banks" hidden>
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Banks</h2>
+          <span id="banks-count" class="count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>BIC</th>
+                <th>Name</th>
+                <th>Members</th>
+              </tr>
+            </thead>
+            <tbody id="banks-body">
+              <tr><td colspan="3" class="empty">Loading banks...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-panel" data-tab-panel="pending" hidden>
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Pending Payment Orders</h2>
+          <span id="pending-count" class="count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PO ID</th>
+                <th>Amount</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Originator</th>
+                <th>Beneficiary</th>
+                <th>OB code</th>
+                <th>BB code</th>
+              </tr>
+            </thead>
+            <tbody id="pending-body">
+              <tr><td colspan="8" class="empty">Loading pending payments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-panel" data-tab-panel="outgoing" hidden>
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Outgoing Payments</h2>
+          <span id="outgoing-count" class="count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PO ID</th>
+                <th>Amount</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Originator</th>
+                <th>Beneficiary</th>
+                <th>OB code</th>
+                <th>BB code</th>
+              </tr>
+            </thead>
+            <tbody id="outgoing-body">
+              <tr><td colspan="8" class="empty">Loading outgoing payments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-panel" data-tab-panel="acks" hidden>
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Outgoing ACKs</h2>
+          <div class="actions">
+            <button class="button secondary" id="send-acks" type="button">Send ACKs</button>
+            <button class="button secondary" id="handle-acks" type="button">Handle ACKs</button>
+          </div>
+        </div>
+        <div class="panel-heading panel-heading--compact">
+          <span class="muted-note">ACK data is loaded from the acknowledgments endpoints.</span>
+          <span id="ack-out-count" class="count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PO ID</th>
+                <th>Amount</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>OB code</th>
+                <th>CB code</th>
+                <th>BB code</th>
+              </tr>
+            </thead>
+            <tbody id="ack-out-body">
+              <tr><td colspan="7" class="empty">Loading outgoing ACKs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-panel" data-tab-panel="logs" hidden>
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Logs</h2>
+          <span id="logs-count" class="count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Code</th>
+                <th>Message</th>
+                <th>PO ID</th>
+              </tr>
+            </thead>
+            <tbody id="logs-body">
+              <tr><td colspan="5" class="empty">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="JS/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPH Bank - Create Account</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img src="img/rph_logo.png" alt="RPH logo">
+      <div class="brand-copy">
+        <h1>Create Account</h1>
+        <p>Add a new local bank account</p>
+      </div>
+    </div>
+    <nav class="top-actions">
+      <a class="button secondary" href="overview.html">Overview</a>
+      <a class="button secondary" href="app.html">Dashboard</a>
+      <a class="button secondary" href="index.html">Log Out</a>
+    </nav>
+  </header>
+
+  <main class="layout narrow">
+    <section class="panel">
+      <form id="create-account-form" class="form-grid">
+        <label class="full-width">
+          Initial balance
+          <input id="initial-balance" type="number" min="0" step="0.01" placeholder="0.00" required>
+        </label>
+
+        <div class="actions full-width">
+          <button class="button" type="submit">Create Account</button>
+        </div>
+      </form>
+
+      <div id="feedback" class="feedback">Ready.</div>
+      <div id="created-account" class="created-account"></div>
+    </section>
+  </main>
+
+  <script type="module" src="JS/create-account.js"></script>
+</body>
+
+</html>
