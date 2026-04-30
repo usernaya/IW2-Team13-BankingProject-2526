@@ -47,7 +47,7 @@
 
         <label>
           Beneficiary IBAN
-          <input id="beneficiary-iban" type="text" maxlength="16" placeholder="BE68639007547034" required>
+          <input id="beneficiary-iban" type="text" maxlength="34" placeholder="BE68639007547034" required>
         </label>
 
         <label>
@@ -137,32 +137,6 @@
 
     <section class="panel">
       <div class="panel-heading">
-        <h2>Incoming Payments</h2>
-        <span id="incoming-count" class="count">0</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>PO ID</th>
-              <th>Amount</th>
-              <th>Message</th>
-              <th>Date</th>
-              <th>Originator</th>
-              <th>Beneficiary</th>
-              <th>OB code</th>
-              <th>BB code</th>
-            </tr>
-          </thead>
-          <tbody id="incoming-body">
-            <tr><td colspan="8" class="empty">Loading incoming payments...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-heading">
         <h2>Banks</h2>
         <span id="banks-count" class="count">0</span>
       </div>
@@ -202,31 +176,6 @@
           </thead>
           <tbody id="ack-out-body">
             <tr><td colspan="7" class="empty">Loading outgoing ACKs...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-heading">
-        <h2>Incoming ACKs</h2>
-        <span id="ack-in-count" class="count">0</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>PO ID</th>
-              <th>Amount</th>
-              <th>Message</th>
-              <th>Date</th>
-              <th>OB code</th>
-              <th>CB code</th>
-              <th>BB code</th>
-            </tr>
-          </thead>
-          <tbody id="ack-in-body">
-            <tr><td colspan="7" class="empty">Loading incoming ACKs...</td></tr>
           </tbody>
         </table>
       </div>

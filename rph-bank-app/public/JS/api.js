@@ -204,7 +204,10 @@ export function sendAcknowledgments() {
 }
 
 export function handleAcknowledgments() {
-  return request("/acknowledgments/handle", { method: "POST" });
+  return request("/acknowledgments/handle", { method: "POST" }).then((response) => ({
+    ...response,
+    acknowledgments: dataOf(response).map(normalizeAcknowledgment),
+  }));
 }
 
 export async function getLogs() {

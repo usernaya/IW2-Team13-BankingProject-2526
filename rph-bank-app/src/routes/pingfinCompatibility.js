@@ -28,6 +28,51 @@ function formatDateTime(date = new Date()) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
+function isAcceptedIban(value) {
+    const iban = String(value || "").replace(/\s/g, "").toUpperCase();
+    return IBAN.isValid(iban) || /^BE\d{14}$/.test(iban);
+}
+
+function toAcknowledgmentRow(ack, fallback = {}) {
+    const now = formatDateTime();
+
+    return [
+        ack.po_id,
+        Number(ack.po_amount ?? fallback.po_amount ?? 0.01),
+        ack.po_message ?? fallback.po_message ?? "",
+        ack.po_datetime ?? fallback.po_datetime ?? now,
+        ack.ob_id ?? fallback.ob_id ?? "UNKNBEBB",
+        ack.oa_id ?? fallback.oa_id ?? "UNKNOWN",
+        ack.ob_code ?? fallback.ob_code ?? 1000,
+        ack.ob_datetime ?? fallback.ob_datetime ?? now,
+        ack.cb_code ?? fallback.cb_code ?? 1000,
+        ack.cb_datetime ?? fallback.cb_datetime ?? now,
+        ack.bb_id ?? fallback.bb_id ?? process.env.BIC ?? "BMPBBEBB",
+        ack.ba_id ?? fallback.ba_id ?? "UNKNOWN",
+        ack.bb_code ?? fallback.bb_code ?? null,
+        ack.bb_datetime ?? fallback.bb_datetime ?? now,
+    ];
+}
+
+function toPaymentInRow(po, bbCode, bbDatetime) {
+    const now = formatDateTime();
+
+    return [
+        po.po_id,
+        Number(po.po_amount ?? 0.01),
+        po.po_message ?? "",
+        po.po_datetime ?? now,
+        po.ob_id ?? "UNKNBEBB",
+        po.oa_id ?? "UNKNOWN",
+        po.ob_code ?? 1000,
+        po.ob_datetime ?? now,
+        po.bb_id ?? process.env.BIC ?? "BMPBBEBB",
+        po.ba_id ?? "UNKNOWN",
+        po.cb_code ?? 1000,
+        po.cb_datetime ?? bbDatetime,
+    ];
+}
+
 router.get("/info", (req, res) => {
     res.json(withOk({
         team: "IW2-G13 RPH Bank",
@@ -91,6 +136,7 @@ router.get("/accounts", async (req, res) => {
 router.post("/po_in", async (req, res) => {
     const paymentOrders = asArray(req.body);
     const acknowledgments = [];
+    const acknowledgmentRows = [];
     const now = formatDateTime();
 
     for (const po of paymentOrders) {
@@ -99,26 +145,26 @@ router.post("/po_in", async (req, res) => {
             bb_datetime: po.bb_datetime ?? now
         };
 
-        if (!IBAN.isValid(String(po.ba_id || ""))) {
+        if (!isAcceptedIban(po.ba_id)) {
             acknowledgment.bb_code = 2002;
         } else {
             const account = await Account.getFromIban(po.ba_id);
             acknowledgment.bb_code = account ? 2000 : 2001;
 
             if (account) {
-                await Payment.createPoIn({
-                    ...po,
-                    bb_code: acknowledgment.bb_code,
-                    bb_datetime: acknowledgment.bb_datetime
-                });
-                await Account.addMoney(po.ba_id, po.po_amount);
+                await Payment.createPoIn(toPaymentInRow(po, acknowledgment.bb_code, acknowledgment.bb_datetime));
+                await Account.creditMoney(po.ba_id, Number(po.po_amount), po.po_id);
             }
         }
 
         acknowledgments.push(acknowledgment);
+        acknowledgmentRows.push(toAcknowledgmentRow(acknowledgment));
     }
 
-    await Acknowledgment.createOutgoing(acknowledgments);
+    if (acknowledgmentRows.length) {
+        await Acknowledgment.createOutgoing(acknowledgmentRows);
+    }
+
     res.status(201).json(withOk(acknowledgments, "Payment orders received."));
 });
 
@@ -136,17 +182,21 @@ router.get("/po_out", async (req, res) => {
 
 router.post("/ack_in", async (req, res) => {
     const acknowledgments = asArray(req.body);
+    const now = formatDateTime();
 
     for (const ack of acknowledgments) {
         const po = await Payment.getPaymentOrder(ack.po_id);
 
         if (po && Number(ack.bb_code) === 2000) {
-            await Account.deductMoney(po.oa_id, po.po_amount);
+            await Account.deductMoney(po.oa_id, po.po_amount, po.po_id);
         }
 
-        await Acknowledgment.createIngoing(ack);
-        await Payment.removePoOutRecord(ack.po_id);
-        await Payment.removePoNewRecord(ack.po_id);
+        await Acknowledgment.createIngoing(toAcknowledgmentRow(ack, po));
+
+        if (po) {
+            await Payment.removePoOutRecord(ack.po_id);
+            await Payment.removePoNewRecord(ack.po_id);
+        }
     }
 
     res.status(201).json(withOk(acknowledgments, "Acknowledgments received."));

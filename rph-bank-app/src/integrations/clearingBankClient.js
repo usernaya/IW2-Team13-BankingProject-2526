@@ -1,8 +1,13 @@
-const secretBankCode = process.env.CB_SECRET_KEY;
-const cbBaseApiUrl = process.env.CB_API_BASE_URL;
-const bic = process.env.BIC;
 let token = null;
 let tokenPromise = null;
+
+function getConfig() {
+  return {
+    secretBankCode: process.env.CB_SECRET_KEY,
+    cbBaseApiUrl: process.env.CB_API_BASE_URL,
+    bic: process.env.BIC,
+  };
+}
 
 async function getToken(forceRefresh = false) {
   if (token && !forceRefresh) {
@@ -14,6 +19,7 @@ async function getToken(forceRefresh = false) {
   }
 
   tokenPromise = (async () => {
+    const { secretBankCode, cbBaseApiUrl, bic } = getConfig();
     const response = await fetch(`${cbBaseApiUrl}/token`, {
       method: "POST",
       headers: {
@@ -45,6 +51,7 @@ async function getToken(forceRefresh = false) {
 export async function request(path, options = {}, isRetry = false) {
   // If its a retry due to 401, the token should be force refreshed
   const token = await getToken(isRetry);
+  const { cbBaseApiUrl } = getConfig();
 
   const res = await fetch(`${cbBaseApiUrl}${path}`, {
     ...options,

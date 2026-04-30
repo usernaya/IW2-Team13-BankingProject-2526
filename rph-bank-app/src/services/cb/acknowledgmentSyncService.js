@@ -152,7 +152,6 @@ export async function handleIncomingAcknowledgments() {
   }
 
   const processed = [];
-  const createdIds = [];
 
   for (const ack of value.data) {
     const po = await Payment.getPaymentOrder(ack.po_id);
@@ -195,8 +194,6 @@ export async function handleIncomingAcknowledgments() {
       bb_datetime: ack.bb_datetime,
     });
 
-    createdIds.push(ack.po_id);
-
     if (po) {
       if (ack.bb_code === 2000) {
         await Account.deductMoney(po.oa_id, po.po_amount, po.po_id);
@@ -205,10 +202,6 @@ export async function handleIncomingAcknowledgments() {
     }
 
     processed.push(ack);
-  }
-
-  if (createdIds.length) {
-    await Acknowledgment.clearIngoing(createdIds);
   }
 
   return processed;

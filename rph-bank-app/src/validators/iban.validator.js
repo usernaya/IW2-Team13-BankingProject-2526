@@ -1,9 +1,12 @@
 import IBAN from "iban";
 
 export function validateIban(value, helpers) {
-  if (!IBAN.isValid(value.trim())) {
-    console.log(value);
+  const iban = String(value).trim().replace(/\s/g, "").toUpperCase();
+  const isBelgianTestIban = /^BE\d{14}$/.test(iban);
+
+  if (!IBAN.isValid(iban) && !isBelgianTestIban) {
     return helpers.error("any.invalid");
   }
-  return value;
+
+  return iban;
 }

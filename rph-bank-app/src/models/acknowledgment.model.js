@@ -19,6 +19,20 @@ export const Acknowledgment = {
         `
                 INSERT INTO ack_in (po_id, po_amount, po_message, po_datetime, ob_id, oa_id, ob_code, ob_datetime, cb_code, cb_datetime, bb_id, ba_id, bb_code, bb_datetime)
                 VALUES ${placeholders}
+                ON DUPLICATE KEY UPDATE
+                  po_amount = VALUES(po_amount),
+                  po_message = VALUES(po_message),
+                  po_datetime = VALUES(po_datetime),
+                  ob_id = VALUES(ob_id),
+                  oa_id = VALUES(oa_id),
+                  ob_code = VALUES(ob_code),
+                  ob_datetime = VALUES(ob_datetime),
+                  cb_code = VALUES(cb_code),
+                  cb_datetime = VALUES(cb_datetime),
+                  bb_id = VALUES(bb_id),
+                  ba_id = VALUES(ba_id),
+                  bb_code = VALUES(bb_code),
+                  bb_datetime = VALUES(bb_datetime)
                 `,
         flattened,
       );
@@ -27,6 +41,20 @@ export const Acknowledgment = {
         `
                 INSERT INTO ack_in (po_id, po_amount, po_message, po_datetime, ob_id, oa_id, ob_code, ob_datetime, cb_code, cb_datetime, bb_id, ba_id, bb_code, bb_datetime)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                  po_amount = VALUES(po_amount),
+                  po_message = VALUES(po_message),
+                  po_datetime = VALUES(po_datetime),
+                  ob_id = VALUES(ob_id),
+                  oa_id = VALUES(oa_id),
+                  ob_code = VALUES(ob_code),
+                  ob_datetime = VALUES(ob_datetime),
+                  cb_code = VALUES(cb_code),
+                  cb_datetime = VALUES(cb_datetime),
+                  bb_id = VALUES(bb_id),
+                  ba_id = VALUES(ba_id),
+                  bb_code = VALUES(bb_code),
+                  bb_datetime = VALUES(bb_datetime)
                 `,
         rows,
       );
@@ -34,6 +62,23 @@ export const Acknowledgment = {
   },
 
   async createOutgoing(rows) {
+    const updateDuplicate = `
+                ON DUPLICATE KEY UPDATE
+                  po_amount = VALUES(po_amount),
+                  po_message = VALUES(po_message),
+                  po_datetime = VALUES(po_datetime),
+                  ob_id = VALUES(ob_id),
+                  oa_id = VALUES(oa_id),
+                  ob_code = VALUES(ob_code),
+                  ob_datetime = VALUES(ob_datetime),
+                  cb_code = VALUES(cb_code),
+                  cb_datetime = VALUES(cb_datetime),
+                  bb_id = VALUES(bb_id),
+                  ba_id = VALUES(ba_id),
+                  bb_code = VALUES(bb_code),
+                  bb_datetime = VALUES(bb_datetime)
+                `;
+
     if (Array.isArray(rows[0])) {
       const placeholders = rows
         .map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -43,6 +88,7 @@ export const Acknowledgment = {
         `
                 INSERT INTO ack_out (po_id, po_amount, po_message, po_datetime, ob_id, oa_id, ob_code, ob_datetime, cb_code, cb_datetime, bb_id, ba_id, bb_code, bb_datetime)
                 VALUES ${placeholders}
+                ${updateDuplicate}
                 `,
         flattened,
       );
@@ -51,6 +97,7 @@ export const Acknowledgment = {
         `
                 INSERT INTO ack_out (po_id, po_amount, po_message, po_datetime, ob_id, oa_id, ob_code, ob_datetime, cb_code, cb_datetime, bb_id, ba_id, bb_code, bb_datetime)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ${updateDuplicate}
                 `,
         rows,
       );

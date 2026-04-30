@@ -2,8 +2,6 @@ import {
   createPaymentOrder,
   getAccounts,
   getBanks,
-  getIncomingAcknowledgments,
-  getIncomingPayments,
   getLogs,
   getOutgoingAcknowledgments,
   getOutgoingPayments,
@@ -37,12 +35,8 @@ const el = {
   pendingBody: document.querySelector("#pending-body"),
   outgoingCount: document.querySelector("#outgoing-count"),
   outgoingBody: document.querySelector("#outgoing-body"),
-  incomingCount: document.querySelector("#incoming-count"),
-  incomingBody: document.querySelector("#incoming-body"),
   ackOutCount: document.querySelector("#ack-out-count"),
   ackOutBody: document.querySelector("#ack-out-body"),
-  ackInCount: document.querySelector("#ack-in-count"),
-  ackInBody: document.querySelector("#ack-in-body"),
   logsCount: document.querySelector("#logs-count"),
   logsBody: document.querySelector("#logs-body"),
 };
@@ -59,7 +53,7 @@ function bindEvents() {
   document.querySelector("#send-payments")?.addEventListener("click", () => runAction(sendPayments, "Outgoing payments sent."));
   document.querySelector("#handle-payments")?.addEventListener("click", () => runAction(handlePayments, "Incoming payments handled."));
   document.querySelector("#send-acks")?.addEventListener("click", () => runAction(sendAcknowledgments, "Outgoing ACKs sent."));
-  document.querySelector("#handle-acks")?.addEventListener("click", () => runAction(handleAcknowledgments, "Incoming ACKs handled."));
+  document.querySelector("#handle-acks")?.addEventListener("click", onHandleAcknowledgments);
 }
 
 async function loadDashboard() {
@@ -70,7 +64,6 @@ async function loadDashboard() {
     loadBanks(false),
     loadPendingPayments(),
     loadOutgoingPayments(),
-    loadIncomingPayments(),
     loadAcknowledgments(),
     loadLogs(),
   ]);
@@ -119,33 +112,17 @@ async function loadOutgoingPayments() {
   }
 }
 
-async function loadIncomingPayments() {
-  try {
-    renderPayments(el.incomingBody, el.incomingCount, await getIncomingPayments());
-  } catch (error) {
-    renderError(el.incomingBody, "Incoming payments could not be loaded.", 8);
-    showFeedback("error", error.message);
-  }
-}
-
 async function loadAcknowledgments() {
-  const [outgoing, incoming] = await Promise.allSettled([
-    getOutgoingAcknowledgments(),
-    getIncomingAcknowledgments(),
-  ]);
+  const outgoing = await Promise.resolve(getOutgoingAcknowledgments()).then(
+    (value) => ({ status: "fulfilled", value }),
+    (reason) => ({ status: "rejected", reason }),
+  );
 
   if (outgoing.status === "fulfilled") {
     renderAcks(el.ackOutBody, el.ackOutCount, outgoing.value);
   } else {
     renderError(el.ackOutBody, "Outgoing ACKs could not be loaded.", 7);
     showFeedback("error", outgoing.reason.message);
-  }
-
-  if (incoming.status === "fulfilled") {
-    renderAcks(el.ackInBody, el.ackInCount, incoming.value);
-  } else {
-    renderError(el.ackInBody, "Incoming ACKs could not be loaded.", 7);
-    showFeedback("error", incoming.reason.message);
   }
 }
 
@@ -165,7 +142,7 @@ async function onCreatePayment(event) {
     fromAccount: el.fromAccount.value,
     amount: Number(el.amount.value),
     message: el.message.value.trim() || "SEPA payment",
-    beneficiaryIban: el.beneficiaryIban.value.trim().toUpperCase(),
+    beneficiaryIban: normalizeIban(el.beneficiaryIban.value),
     beneficiaryBic: resolveBeneficiaryBic(),
   };
 
@@ -175,7 +152,15 @@ async function onCreatePayment(event) {
     return;
   }
 
-  await runAction(() => createPaymentOrder(payment), "Payment order created.");
+  await runAction(async () => {
+    await createPaymentOrder(payment);
+
+    if (payment.beneficiaryBic !== OWN_BIC) {
+      return sendPayments();
+    }
+
+    return { message: "Internal payment completed." };
+  }, payment.beneficiaryBic === OWN_BIC ? "Internal payment completed." : "Payment order created and sent.");
   event.target.reset();
 }
 
@@ -190,19 +175,56 @@ async function runAction(action, successMessage) {
   }
 }
 
+async function onHandleAcknowledgments() {
+  try {
+    showFeedback("loading", "Handling incoming ACKs...");
+    const result = await handleAcknowledgments();
+    await loadDashboard();
+
+    showFeedback(
+      "success",
+      result.acknowledgments?.length
+        ? `${result.acknowledgments.length} incoming ACK(s) handled.`
+        : result.message || "No incoming ACKs found.",
+    );
+  } catch (error) {
+    showFeedback("error", error.message);
+  }
+}
+
 function resolveBeneficiaryBic() {
-  const iban = el.beneficiaryIban.value.trim().toUpperCase();
+  const iban = normalizeIban(el.beneficiaryIban.value);
   return state.accounts.some((account) => account.iban === iban) ? OWN_BIC : el.beneficiaryBic.value;
 }
 
 function validatePayment(payment) {
   if (!payment.fromAccount) return "Choose an originator account.";
   if (!payment.beneficiaryBic) return "Choose a beneficiary bank.";
-  if (!/^BE\d{14}$/.test(payment.beneficiaryIban)) return "Use a valid Belgian IBAN, for example BE68639007547034.";
+  if (!isValidIban(payment.beneficiaryIban)) return "Use a Belgian test IBAN like BE19384756283910 or a real IBAN with checksum.";
   if (!Number.isFinite(payment.amount) || payment.amount < 0.01 || payment.amount > 500) return "Amount must be between 0.01 and 500 EUR.";
   if (payment.message.length < 5 || !/[A-Za-z]/.test(payment.message)) return "Message must contain at least 5 characters and one letter.";
   if (payment.fromAccount === payment.beneficiaryIban) return "Originator and beneficiary account cannot be the same.";
   return "";
+}
+
+function normalizeIban(value) {
+  return String(value || "").replace(/\s/g, "").toUpperCase();
+}
+
+function isValidIban(value) {
+  const iban = normalizeIban(value);
+  if (/^BE\d{14}$/.test(iban)) return true;
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
+
+  const rearranged = `${iban.slice(4)}${iban.slice(0, 4)}`;
+  const numeric = rearranged.replace(/[A-Z]/g, (char) => String(char.charCodeAt(0) - 55));
+
+  let remainder = 0;
+  for (const digit of numeric) {
+    remainder = (remainder * 10 + Number(digit)) % 97;
+  }
+
+  return remainder === 1;
 }
 
 function renderAccountSelect() {

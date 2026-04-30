@@ -7,6 +7,11 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { getApiHelp } from "./controllers/help.controller.js";
 import { getBankInfo } from "./controllers/info.controller.js";
 import { getAllAccounts } from "./controllers/account.controller.js";
+import {
+  getIncomingAcknowledgments,
+  getOutgoingAcknowledgments,
+} from "./controllers/acknowledgment.controller.js";
+import pingfinCompatibilityRouter from "./routes/pingfinCompatibility.js";
 
 // dotenv
 import dotenv from "dotenv";
@@ -61,6 +66,9 @@ for (const version of versions) {
 app.get("/api/help", getApiHelp);
 app.get("/api/info", getBankInfo);
 app.get("/api/accounts", getAllAccounts);
+app.get("/api/v1/acknowledgments/incoming", getIncomingAcknowledgments);
+app.get("/api/v1/acknowledgments/outgoing", getOutgoingAcknowledgments);
+app.use("/api", pingfinCompatibilityRouter);
 
 app.use(errorHandler);
 
