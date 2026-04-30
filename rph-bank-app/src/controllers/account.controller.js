@@ -1,8 +1,5 @@
 import { Account } from "../models/account.model.js";
-import Joi from "joi";
-import IBAN from "iban";
 import { generateBelgianIBAN } from "../utils/belgianIbanGenerator.js";
-import { getFromIbanSchema } from "../schemas/account.schemas.js";
 
 export async function getAllAccounts(req, res) {
   const accounts = await Account.getAll();
@@ -23,10 +20,12 @@ export async function getFromIban(req, res) {
 }
 
 export async function createNewAccount(req, res) {
+  const balance = req.validated?.body?.balance ?? 0;
   const iban = generateBelgianIBAN();
-  await Account.createAccount(iban);
+  await Account.createAccount(iban, balance);
   res.status(201).json({
     iban: iban,
+    balance: balance,
     message: "Account successfully created.",
   });
 }

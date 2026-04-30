@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>RPH - Create Account</title>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+   <main class="card" aria-labelledby="create-account-title">
+      <div class="img-logo">
+         <img alt="RPH Banking logo" src="img/rph_logo.png">
+         <div class="top-actions">
+            <button class="btn-primary" type="button" onclick="window.location.href='app.html'">Back</button>
+            <button class="btn-primary" id="log-out" type="button" onclick="window.location.href='index.html'">Log Out</button>
+         </div>
+      </div>
+
+      <div class="card-title" id="create-account-title">Create Account</div>
+
+      <form id="create-account-form">
+         <div class="field">
+            <label for="initial-balance">Initial balance (in EUR):</label>
+            <input type="number" id="initial-balance" lang="en" placeholder="0.00" min="0" max="9999999999999.99" step="0.01" required>
+         </div>
+
+         <div class="feedback-box" id="account-feedback">
+            <div class="feedback-text"></div>
+         </div>
+
+         <div class="actions">
+            <button class="btn-primary" id="btn-create-account" type="submit">Create Account</button>
+         </div>
+      </form>
+
+      <div class="account-created" id="created-account"></div>
+   </main>
+
+   <footer>PingFin - IW2-G13 &copy; 2026</footer>
+
+   <script src="JS/create-account.js"></script>
+</body>
+
+</html>

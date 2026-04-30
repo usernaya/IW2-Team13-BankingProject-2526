@@ -27,12 +27,12 @@ export const Account = {
         return data[0];
     },
 
-    async createAccount(iban) {
+    async createAccount(iban, balance = 0) {
         await pool.query(`
-            INSERT INTO accounts (id)
+            INSERT INTO accounts (id, balance)
             VALUES 
-            (?)
-            `, [iban]);
+            (?, ?)
+            `, [iban, balance]);
     },
 
     async calculateAvailableBalance(iban) {

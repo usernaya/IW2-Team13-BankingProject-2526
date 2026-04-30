@@ -59,6 +59,19 @@ body {
    height: 50px;
 }
 
+.top-actions {
+   display: flex;
+   gap: 8px;
+   flex-wrap: wrap;
+   justify-content: flex-end;
+}
+
+.top-actions .btn-primary {
+   flex: none;
+   padding: 7px 12px;
+   font-size: 11px;
+}
+
 #log-out {
    flex: none;
    padding: 7px 12px;
@@ -445,6 +458,14 @@ tbody td.td-amount {
 
 .login-actions {
    justify-content: center;
+}
+
+.account-created {
+   margin-top: 14px;
+}
+
+.account-created .data-card__iban {
+   overflow-wrap: anywhere;
 }
 
 /* ════════════════════════════════════════
