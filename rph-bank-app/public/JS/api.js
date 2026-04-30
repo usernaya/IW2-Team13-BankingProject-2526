@@ -1,119 +1,212 @@
-import { formatDateTime } from "./utils.js";
-
-const API_BASE_URL = "/api/v1";
-const ENDPOINTS = {
-  accounts: "/accounts",
-  banks: "/banks",
-  paymentOrders: "/payments/pending",
-  createPaymentOrder: "/payments",
-  fetchAcknowledgments: "/acknowledgments/handle",
-};
+const API_BASE = "/api/v1";
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
-    ...options,
   });
 
-  const contentType = response.headers.get("Content-Type") || "";
-  const data = contentType.includes("application/json")
+  const contentType = response.headers.get("content-type") || "";
+  const body = contentType.includes("application/json")
     ? await response.json()
     : await response.text();
 
   if (!response.ok) {
-    const message = typeof data === "object" && data !== null ? data.error || data.message : data;
-    throw new Error(message || `Request failed: ${response.status}`);
+    throw new Error(readError(body, response.status));
   }
 
-  return data;
+  return body;
 }
 
-function extractData(response) {
-  if (Array.isArray(response)) {
-    return response;
+async function requestOptionalList(path) {
+  try {
+    return dataOf(await request(path));
+  } catch (error) {
+    if (error.message.includes("Cannot GET") || error.message.includes("status 404")) {
+      return [];
+    }
+
+    throw error;
+  }
+}
+
+function readError(body, status) {
+  if (body && typeof body === "object") {
+    if (Array.isArray(body.errors) && body.errors.length) {
+      return body.errors.map((error) => error.message).filter(Boolean).join(" ");
+    }
+
+    return body.message || body.error || `Request failed with status ${status}`;
   }
 
-  if (response && Array.isArray(response.data)) {
-    return response.data;
+  return body || `Request failed with status ${status}`;
+}
+
+function dataOf(response) {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (response?.data && typeof response.data === "object") return [response.data];
+  if (response && typeof response === "object") return [response];
+  return [];
+}
+
+function asNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+export function formatDateTime(value) {
+  if (!value) return "-";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) {
+    return value;
   }
 
-  return response ? [response] : [];
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  const pad = (part) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-function normalizeAccounts(accounts) {
-  return accounts.map((account) => ({
-    id: account.id || account.iban,
-    iban: account.id || account.iban,
-    balance: Number(account.balance ?? 0),
-    currentBalance: Number(account.balance ?? 0),
-    availableBalance: Number(account.available_balance ?? account.balance ?? 0),
-  }));
-}
-
-function normalizePaymentOrders(orders) {
-  return orders.map((order, index) => normalizePaymentOrder(order, index));
-}
-
-function normalizePaymentOrder(order, index = 0) {
-  if (Array.isArray(order)) {
-    return order.length ? normalizePaymentOrder(order[0], index) : null;
-  }
+export function normalizeAccount(account) {
+  const id = account.id || account.iban || "";
+  const balance = asNumber(account.balance ?? account.balans);
+  const availableBalance = asNumber(account.available_balance ?? account.availableBalance ?? balance);
 
   return {
-    id: order.id || order.po_id || index + 1,
-    amount: Number(order.amount ?? order.po_amount ?? 0),
-    msg: order.msg || order.po_message || "-",
-    datetime: formatDateTime(order.datetime || order.po_datetime || ""),
-    po_id: order.po_id || order.id || "-",
-    account_id: order.account_id || order.oa_id || "-",
+    id,
+    iban: id,
+    balance,
+    availableBalance,
   };
 }
 
-function normalizeMembers(members) {
-  return members.map((member) => ({
-    bic: member.bic || member.id,
-    bank: member.name || member.bank || member.bic || member.id,
-  }));
+export function normalizePaymentOrder(order, index = 0) {
+  const poId = order.po_id || order.id || `row-${index + 1}`;
+
+  return {
+    id: order.id ?? index + 1,
+    poId,
+    amount: asNumber(order.po_amount ?? order.amount),
+    message: order.po_message ?? order.message ?? order.msg ?? "",
+    datetime: formatDateTime(order.po_datetime ?? order.datetime),
+    originatorBank: order.ob_id || "-",
+    originatorAccount: order.oa_id || order.account_id || "-",
+    originatorCode: order.ob_code ?? "-",
+    beneficiaryBank: order.bb_id || "-",
+    beneficiaryAccount: order.ba_id || "-",
+    beneficiaryCode: order.bb_code ?? "-",
+    cbCode: order.cb_code ?? "-",
+  };
+}
+
+export function normalizeBank(bank) {
+  return {
+    bic: bank.id || bank.bic || "",
+    name: bank.name || bank.bank || bank.id || bank.bic || "",
+    members: bank.members || "",
+  };
+}
+
+export function normalizeAcknowledgment(ack, index = 0) {
+  return {
+    id: ack.id ?? index + 1,
+    poId: ack.po_id || "-",
+    amount: asNumber(ack.po_amount),
+    message: ack.po_message ?? "",
+    datetime: formatDateTime(ack.bb_datetime || ack.cb_datetime || ack.ob_datetime || ack.po_datetime),
+    originatorCode: ack.ob_code ?? "-",
+    beneficiaryCode: ack.bb_code ?? "-",
+    cbCode: ack.cb_code ?? "-",
+  };
+}
+
+export function normalizeLog(log, index = 0) {
+  return {
+    id: log.id ?? index + 1,
+    datetime: formatDateTime(log.datetime),
+    type: log.type || "-",
+    code: log.code ?? "-",
+    message: log.message || "-",
+    poId: log.po_id || "-",
+  };
 }
 
 export async function getAccounts() {
-  const response = await request(ENDPOINTS.accounts);
-  return normalizeAccounts(extractData(response));
+  return dataOf(await request("/accounts")).map(normalizeAccount);
 }
 
-export async function getPaymentOrders() {
-  const response = await request(ENDPOINTS.paymentOrders);
-  return normalizePaymentOrders(extractData(response));
+export async function createAccount(balance) {
+  return normalizeAccount(
+    dataOf(
+      await request("/accounts", {
+        method: "POST",
+        body: JSON.stringify({ balans: asNumber(balance) }),
+      }),
+    )[0],
+  );
 }
 
 export async function getBanks(refresh = false) {
-  const query = refresh ? "?refresh=true" : "";
-  const response = await request(`${ENDPOINTS.banks}${query}`);
-  return normalizeMembers(extractData(response));
+  return dataOf(await request(`/banks${refresh ? "?refresh=true" : ""}`)).map(normalizeBank);
 }
 
-export async function createPaymentOrder(paymentOrder) {
-  const payload = {
-    oa_id: paymentOrder.account_id,
-    po_amount: paymentOrder.amount,
-    po_message: paymentOrder.msg,
-    ba_id: paymentOrder.iban,
-    bb_id: paymentOrder.bb_id,
-  };
-
-  const response = await request(ENDPOINTS.createPaymentOrder, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-
-  return normalizePaymentOrder(extractData(response)[0]);
+export async function getPendingPayments() {
+  return dataOf(await request("/payments/pending")).map(normalizePaymentOrder);
 }
 
-export async function fetchAcknowledgments() {
-  return request(ENDPOINTS.fetchAcknowledgments, {
-    method: "POST",
-  });
+export async function getOutgoingPayments() {
+  return dataOf(await request("/payments/outgoing")).map(normalizePaymentOrder);
+}
+
+export async function getIncomingPayments() {
+  return dataOf(await request("/payments/incoming")).map(normalizePaymentOrder);
+}
+
+export async function createPaymentOrder({ fromAccount, amount, message, beneficiaryIban, beneficiaryBic }) {
+  return normalizePaymentOrder(
+    dataOf(
+      await request("/payments", {
+        method: "POST",
+        body: JSON.stringify({
+          oa_id: fromAccount,
+          po_amount: asNumber(amount),
+          po_message: message,
+          ba_id: beneficiaryIban,
+          bb_id: beneficiaryBic,
+        }),
+      }),
+    )[0],
+  );
+}
+
+export function sendPayments() {
+  return request("/payments/send", { method: "POST" });
+}
+
+export function handlePayments() {
+  return request("/payments/handle", { method: "POST" });
+}
+
+export async function getOutgoingAcknowledgments() {
+  return (await requestOptionalList("/acknowledgments/outgoing")).map(normalizeAcknowledgment);
+}
+
+export async function getIncomingAcknowledgments() {
+  return (await requestOptionalList("/acknowledgments/incoming")).map(normalizeAcknowledgment);
+}
+
+export function sendAcknowledgments() {
+  return request("/acknowledgments/send", { method: "POST" });
+}
+
+export function handleAcknowledgments() {
+  return request("/acknowledgments/handle", { method: "POST" });
+}
+
+export async function getLogs() {
+  return dataOf(await request("/logs")).map(normalizeLog);
 }

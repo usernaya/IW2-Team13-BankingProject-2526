@@ -1,479 +1,335 @@
-/* ════════════════════════════════════════
-   PingFin — SEPA Payments
-   css/style.css
-   ════════════════════════════════════════ */
-
-/* ── Variables ── */
 :root {
-   --bg: #f5f4f1;
-   --surface: #ffffff;
-   --surface-alt: #fafaf8;
-   --border: #dddbd5;
-   --border-strong: #b8b5ae;
-   --text: #1a1a18;
-   --text-muted: #7a7872;
-   --text-hint: #b0ada6;
-   --green: #2d6a4f;
-   --green-light: #e8f4ed;
-   --red: #a32d2d;
-   --red-light: #fcebeb;
-   --red-border: #f09595;
-   --mono: 'DM Mono', monospace;
-   --sans: 'DM Sans', sans-serif;
-   --radius: 8px;
-   --radius-lg: 14px;
-   --shadow: 0 1px 4px rgba(0, 0, 0, .06);
+  --bg: #f3f5f2;
+  --panel: #ffffff;
+  --panel-soft: #f8faf7;
+  --line: #d9ded5;
+  --line-strong: #a9b3a4;
+  --text: #172018;
+  --muted: #667063;
+  --brand: #2f6b4f;
+  --brand-dark: #24533d;
+  --danger: #a23d3d;
+  --danger-bg: #fff0f0;
+  --success-bg: #edf8f1;
+  --warning-bg: #fff8e5;
+  --radius: 8px;
+  --mono: Consolas, "Liberation Mono", monospace;
+  --sans: Inter, "Segoe UI", Arial, sans-serif;
 }
 
-/* ── Reset ── */
-*,
-*::before,
-*::after {
-   box-sizing: border-box;
-   margin: 0;
-   padding: 0;
+* {
+  box-sizing: border-box;
 }
 
-/* ── Body ── */
 body {
-   font-family: var(--sans);
-   background: var(--bg);
-   color: var(--text);
-   min-height: 100vh;
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   padding: 40px 16px 60px;
-   gap: 16px;
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
 }
 
-/* ── Logo row ── */
-.img-logo {
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
+.app-header {
+  width: min(1440px, calc(100% - 32px));
+  margin: 20px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.img-logo img {
-   width: 50px;
-   height: 50px;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
+.brand img {
+  width: 48px;
+  height: 48px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 22px;
+}
+
+h2 {
+  font-size: 15px;
+}
+
+.brand p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.layout {
+  width: min(1440px, calc(100% - 32px));
+  margin: 20px auto 48px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.layout.narrow {
+  max-width: 640px;
+  grid-template-columns: 1fr;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(18, 32, 20, 0.06);
+}
+
+.payment-panel {
+  grid-column: 1 / -1;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.count {
+  min-width: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: center;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  color: var(--text);
+  font: 13px var(--mono);
+  padding: 8px 10px;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid rgba(47, 107, 79, 0.2);
+  border-color: var(--brand);
+  background: var(--panel);
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.actions,
 .top-actions {
-   display: flex;
-   gap: 8px;
-   flex-wrap: wrap;
-   justify-content: flex-end;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.top-actions .btn-primary {
-   flex: none;
-   padding: 7px 12px;
-   font-size: 11px;
+.button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--brand);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+  font: 600 13px var(--sans);
+  padding: 8px 12px;
+  text-decoration: none;
 }
 
-#log-out {
-   flex: none;
-   padding: 7px 12px;
-   font-size: 11px;
+.button:hover {
+  background: var(--brand-dark);
 }
 
-/* ════════════════════════════════════════
-   CARD
-   ════════════════════════════════════════ */
-.card {
-   width: 100%;
-   max-width: 620px;
-   background: var(--surface);
-   border: 1px solid var(--border);
-   border-radius: var(--radius-lg);
-   padding: 28px 28px 24px;
-   box-shadow: var(--shadow);
+.button.secondary {
+  background: var(--panel);
+  color: var(--brand);
 }
 
-.card-title {
-   font-size: 17px;
-   font-weight: 500;
-   letter-spacing: -.02em;
-   margin-bottom: 20px;
-   text-align: center;
+.button.secondary:hover {
+  background: var(--success-bg);
 }
 
-/* ════════════════════════════════════════
-   SECTION HEADER
-   ════════════════════════════════════════ */
-.section-header {
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
-   margin-bottom: 14px;
+.feedback {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  color: var(--muted);
+  padding: 10px 12px;
+  font-size: 13px;
 }
 
-.section-title {
-   font-size: 10px;
-   font-weight: 500;
-   text-transform: uppercase;
-   letter-spacing: .07em;
-   color: var(--text-hint);
+.feedback.success {
+  border-color: #b8d9c3;
+  background: var(--success-bg);
+  color: var(--brand-dark);
 }
 
-.section-count {
-   font-size: 10px;
-   font-family: var(--mono);
-   color: var(--text-hint);
-   background: var(--bg);
-   border: 1px solid var(--border);
-   border-radius: 20px;
-   padding: 1px 8px;
+.feedback.error {
+  border-color: #e4aaaa;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
-/* ════════════════════════════════════════
-   FORM FIELDS
-   ════════════════════════════════════════ */
-.field {
-   margin-bottom: 14px;
+.feedback.loading {
+  background: var(--warning-bg);
 }
 
-.field label {
-   display: block;
-   font-size: 11px;
-   font-weight: 500;
-   color: var(--text-muted);
-   margin-bottom: 5px;
-}
-
-.field select,
-.field input[type="text"],
-.field input[type="password"],
-.field input[type="number"] {
-   width: 100%;
-   padding: 9px 12px;
-   font-family: var(--mono);
-   font-size: 13px;
-   color: var(--text);
-   background: var(--surface-alt);
-   border: 1px solid var(--border);
-   border-radius: var(--radius);
-   outline: none;
-   transition: border-color .15s, background .15s;
-   appearance: none;
-   -webkit-appearance: none;
-}
-
-.field select:focus,
-.field input:focus {
-   border-color: var(--border-strong);
-   background: var(--surface);
-}
-
-.field input::placeholder {
-   font-family: var(--sans);
-   color: var(--text-hint);
-   font-size: 13px;
-}
-
-/* Select + refresh button row */
-.select-wrap {
-   display: flex;
-   gap: 8px;
-   align-items: center;
-}
-
-.select-wrap select {
-   flex: 1;
-}
-
-/* Refresh icon button */
-.bank-refresh-icon {
-   width: 22px;
-   height: 22px;
-   border: none;
-   border-radius: 50%;
-   background: transparent;
-   color: var(--text-muted);
-   font-size: 15px;
-   line-height: 1;
-   cursor: pointer;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   flex-shrink: 0;
-   transition: background .15s, color .15s, transform .15s;
-}
-
-.bank-refresh-icon:hover {
-   background: var(--bg);
-   color: var(--text);
-}
-
-/* ── Skeleton loading ── */
-.field select.loading {
-   color: transparent;
-   background: linear-gradient(90deg, #ebebea 25%, #f5f5f4 50%, #ebebea 75%);
-   background-size: 200% 100%;
-   animation: shimmer 1.4s infinite;
-   pointer-events: none;
-}
-
-@keyframes shimmer {
-   0% {
-      background-position: 200% 0;
-   }
-
-   100% {
-      background-position: -200% 0;
-   }
-}
-
-/* ════════════════════════════════════════
-   BUTTONS
-   ════════════════════════════════════════ */
-.actions {
-   display: flex;
-   gap: 8px;
-   flex-wrap: wrap;
-   margin-top: 4px;
-}
-
-.btn-primary {
-   flex: 1 1 auto;
-   padding: 9px 14px;
-   background: var(--green);
-   color: #fff;
-   border: none;
-   border-radius: var(--radius);
-   font-family: var(--sans);
-   font-size: 12px;
-   font-weight: 500;
-   cursor: pointer;
-   text-align: center;
-   transition: opacity .15s;
-}
-
-.btn-primary:hover {
-   opacity: .85;
-}
-
-.btn-primary:active {
-   opacity: .7;
-}
-
-.btn-primary.loading {
-   opacity: .6;
-   pointer-events: none;
-}
-
-/* ════════════════════════════════════════
-   FEEDBACK
-   ════════════════════════════════════════ */
-.feedback-box {
-   display: none;
-   align-items: flex-start;
-   gap: 8px;
-   border-radius: var(--radius);
-   padding: 9px 12px;
-   margin-top: 12px;
-   font-size: 12px;
-   line-height: 1.5;
-}
-
-.feedback-box.visible {
-   display: flex;
-}
-
-.feedback-box.error {
-   background: var(--red-light);
-   border: 1px solid var(--red-border);
-   color: var(--red);
-}
-
-.feedback-box.success {
-   background: var(--green-light);
-   border: 1px solid #8ec9a8;
-   color: var(--green);
-}
-
-.feedback-icon {
-   width: 14px;
-   height: 14px;
-   border-radius: 50%;
-   font-size: 9px;
-   font-weight: 700;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   flex-shrink: 0;
-   margin-top: 1px;
-   color: #fff;
-}
-
-.feedback-box.error .feedback-icon {
-   background: var(--red);
-}
-
-.feedback-box.success .feedback-icon {
-   background: var(--green);
-}
-
-/* ════════════════════════════════════════
-   ACCOUNT CARDS
-   ════════════════════════════════════════ */
 .accounts-grid {
-   display: grid;
-   grid-template-columns: 1fr 1fr;
-   gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
 }
 
-.data-card {
-   background: var(--surface-alt);
-   border: 1px solid var(--border);
-   border-radius: var(--radius);
-   padding: 14px 16px;
-   transition: border-color .15s;
+.account-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  padding: 12px;
 }
 
-.data-card:hover {
-   border-color: var(--border-strong);
+.account-card strong {
+  font-family: var(--mono);
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
-.data-card.skeleton .data-card__iban,
-.data-card.skeleton .data-card__balance {
-   background: linear-gradient(90deg, #ebebea 25%, #f5f5f4 50%, #ebebea 75%);
-   background-size: 200% 100%;
-   animation: shimmer 1.4s infinite;
-   border-radius: 4px;
-   color: transparent !important;
+.account-card span {
+  color: var(--muted);
+  font-size: 13px;
 }
 
-.data-card__iban {
-   font-family: var(--mono);
-   font-size: 11px;
-   color: var(--text-muted);
-   margin-bottom: 6px;
-}
-
-.data-card__balance {
-   font-size: 15px;
-   font-weight: 500;
-   color: var(--text);
-}
-
-.data-card__label {
-   font-size: 10px;
-   color: var(--text-hint);
-   margin-top: 2px;
-}
-
-/* ════════════════════════════════════════
-   TABLES
-   ════════════════════════════════════════ */
 .table-wrap {
-   overflow-x: auto;
+  overflow-x: auto;
 }
 
 table {
-   width: 100%;
-   border-collapse: collapse;
-   font-size: 12px;
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
 }
 
-thead th {
-   font-size: 10px;
-   font-weight: 600;
-   text-transform: uppercase;
-   letter-spacing: .06em;
-   color: var(--text-hint);
-   padding: 0 10px 10px;
-   text-align: left;
-   border-bottom: 1px solid var(--border);
-   white-space: nowrap;
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 9px 10px;
+  text-align: left;
+  vertical-align: top;
 }
 
-tbody tr {
-   border-bottom: 1px solid var(--border);
-   transition: background .1s;
+th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-tbody tr:last-child {
-   border-bottom: none;
+td {
+  font-family: var(--mono);
+  font-size: 12px;
 }
 
-tbody tr:hover {
-   background: var(--bg);
+.empty {
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px 10px;
 }
 
-tbody td {
-   padding: 10px;
-   color: var(--text-muted);
-   font-family: var(--mono);
-   font-size: 12px;
-   vertical-align: middle;
+.error-text {
+  color: var(--danger);
 }
 
-tbody td.td-primary,
-tbody td.td-amount {
-   color: var(--text);
-   font-weight: 500;
+.created-account {
+  margin-top: 12px;
 }
 
-/* Skeleton rows */
-.skeleton-row td span {
-   display: block;
-   height: 10px;
-   border-radius: 4px;
-   background: linear-gradient(90deg, #ebebea 25%, #f5f5f4 50%, #ebebea 75%);
-   background-size: 200% 100%;
-   animation: shimmer 1.4s infinite;
-}
-
-/* Empty state */
-.empty-state {
-   text-align: center;
-   padding: 24px 0;
-   color: var(--text-hint);
-   font-size: 13px;
-   font-family: var(--sans);
-}
-
-/* ════════════════════════════════════════
-   LOGIN PAGE
-   ════════════════════════════════════════ */
 .login-page {
-   justify-content: center;
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 16px;
 }
 
-.login-card {
-   max-width: 400px;
+.login-panel {
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(18, 32, 20, 0.06);
 }
 
-.login-logo {
-   justify-content: center;
+.login-panel img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
 }
 
-.login-subtitle {
-   font-size: 13px;
-   color: var(--text-muted);
-   text-align: center;
+.login-panel p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 6px 0 18px;
 }
 
-.login-actions {
-   justify-content: center;
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
-.account-created {
-   margin-top: 14px;
-}
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 
-.account-created .data-card__iban {
-   overflow-wrap: anywhere;
-}
-
-/* ════════════════════════════════════════
-   FOOTER
-   ════════════════════════════════════════ */
-footer {
-   font-size: 11px;
-   color: var(--text-hint);
-   text-align: center;
-   padding-top: 8px;
+  .layout,
+  .app-header {
+    width: min(100% - 20px, 1440px);
+  }
 }

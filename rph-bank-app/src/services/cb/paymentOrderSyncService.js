@@ -6,7 +6,90 @@ import { Log } from "../../models/log.model.js";
 import { Payment } from "../../models/payment.model.js";
 import { LogTypes } from "../../codes/logTypes.js";
 import { ObCodes } from "../../codes/obCodes.js";
+import { BbCodes } from "../../codes/bbCodes.js";
 import { formatDateTime } from "../../utils/formatDate.js";
+
+const FALLBACK_EXTERNAL_BIC = "UNKNBEBB";
+const FALLBACK_ACCOUNT_ID = "UNKNOWN";
+
+function hasValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function normalizeAmount(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0.01;
+}
+
+function normalizeRequired(value, fallback) {
+  return hasValue(value) ? value : fallback;
+}
+
+function isValidBic(value) {
+  return /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(
+    String(value ?? "").trim().toUpperCase(),
+  );
+}
+
+function normalizeBic(value, fallback) {
+  const bic = String(value ?? "").trim().toUpperCase();
+  return isValidBic(bic) ? bic : fallback;
+}
+
+function normalizeDatetime(value, fallback) {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? fallback : formatDateTime(parsed);
+}
+
+function resolveObCode(po) {
+  const amount = Number(po.po_amount);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return ObCodes.OB_NEGATIVE_AMOUNT.code;
+  }
+
+  if (amount > 500) {
+    return ObCodes.OB_AMOUNT_EXCEEDED.code;
+  }
+
+  if (!isValidBic(po.ob_id)) {
+    return ObCodes.OB_INVALID_BIC.code;
+  }
+
+  if (!hasValue(po.oa_id)) {
+    return ObCodes.OB_UNKNOWN_OA.code;
+  }
+
+  if (!IBAN.isValid(po.oa_id)) {
+    return ObCodes.OB_INVALID_IBAN.code;
+  }
+
+  return hasValue(po.ob_code) ? po.ob_code : ObCodes.OB_OK.code;
+}
+
+function normalizeExternalPaymentOrder(po, bic, date) {
+  return {
+    po_id: normalizeRequired(
+      po.po_id,
+      `INVALID:${bic}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+    ),
+    po_amount: normalizeAmount(po.po_amount),
+    po_message: po.po_message ?? "",
+    po_datetime: normalizeDatetime(po.po_datetime, date),
+    ob_id: normalizeBic(po.ob_id, FALLBACK_EXTERNAL_BIC),
+    oa_id: normalizeRequired(po.oa_id, FALLBACK_ACCOUNT_ID),
+    ob_code: resolveObCode(po),
+    ob_datetime: normalizeDatetime(po.ob_datetime, date),
+    cb_code: normalizeRequired(po.cb_code, ObCodes.OB_OK.code),
+    cb_datetime: date,
+    bb_id: normalizeBic(po.bb_id, bic),
+    ba_id: normalizeRequired(po.ba_id, FALLBACK_ACCOUNT_ID),
+  };
+}
 
 export async function handleIncomingPaymentOrders() {
   const response = await request("/po_out");
@@ -27,47 +110,48 @@ export async function handleIncomingPaymentOrders() {
   const date = formatDateTime(new Date());
 
   for (const po of incoming.data) {
-    const po_datetime = po.po_datetime ?? date;
-    const ob_datetime = po.ob_datetime ?? date;
+    const normalizedPo = normalizeExternalPaymentOrder(po, bic, date);
+    const po_datetime = normalizedPo.po_datetime;
+    const ob_datetime = normalizedPo.ob_datetime;
     const cb_datetime = date;
     const bb_datetime = date;
-    const po_amount = Number(po.po_amount);
-    const po_message = po.po_message ?? "";
+    const po_amount = normalizedPo.po_amount;
+    const po_message = normalizedPo.po_message;
 
-    const bb_code = IBAN.isValid(po.ba_id)
-      ? (await Account.getFromIban(po.ba_id))
-        ? 2000
-        : 2001
-      : 2002;
+    const bb_code = IBAN.isValid(normalizedPo.ba_id)
+      ? (await Account.getFromIban(normalizedPo.ba_id))
+        ? BbCodes.BB_OK.code
+        : BbCodes.BB_UNKNOWN_BA.code
+      : BbCodes.BB_INVALID_IBAN.code;
 
     paymentRows.push([
-      po.po_id,
+      normalizedPo.po_id,
       po_amount,
       po_message,
       po_datetime,
-      po.ob_id,
-      po.oa_id,
-      po.ob_code,
+      normalizedPo.ob_id,
+      normalizedPo.oa_id,
+      normalizedPo.ob_code,
       ob_datetime,
-      po.bb_id,
-      po.ba_id,
-      po.cb_code ?? 1000,
+      normalizedPo.bb_id,
+      normalizedPo.ba_id,
+      normalizedPo.cb_code,
       cb_datetime,
     ]);
 
     acknowledgmentRows.push([
-      po.po_id,
+      normalizedPo.po_id,
       po_amount,
       po_message,
       po_datetime,
-      po.ob_id,
-      po.oa_id,
-      po.ob_code,
+      normalizedPo.ob_id,
+      normalizedPo.oa_id,
+      normalizedPo.ob_code,
       ob_datetime,
-      po.cb_code ?? 1000,
+      normalizedPo.cb_code,
       cb_datetime,
-      po.bb_id,
-      po.ba_id,
+      normalizedPo.bb_id,
+      normalizedPo.ba_id,
       bb_code,
       bb_datetime,
     ]);

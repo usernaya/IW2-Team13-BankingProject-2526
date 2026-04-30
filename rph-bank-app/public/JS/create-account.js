@@ -1,125 +1,53 @@
-const API_BASE_URL = "/api/v1";
-const CREATE_ACCOUNT_ENDPOINT = "/accounts";
+import { createAccount } from "./api.js";
 
 const form = document.querySelector("#create-account-form");
-const balanceInput = document.querySelector("#initial-balance");
-const createButton = document.querySelector("#btn-create-account");
-const feedbackBox = document.querySelector("#account-feedback");
-const feedbackText = document.querySelector("#account-feedback .feedback-text");
-const createdAccount = document.querySelector("#created-account");
+const balance = document.querySelector("#initial-balance");
+const feedback = document.querySelector("#feedback");
+const result = document.querySelector("#created-account");
 
-form.addEventListener("submit", handleCreateAccount);
-balanceInput.addEventListener("blur", formatBalanceInput);
-balanceInput.addEventListener("change", formatBalanceInput);
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-async function handleCreateAccount(event) {
-   event.preventDefault();
+  const initialBalance = Number(balance.value);
+  if (!Number.isFinite(initialBalance) || initialBalance < 0) {
+    showFeedback("error", "Initial balance must be 0 or higher.");
+    return;
+  }
 
-   const balance = Number(balanceInput.value);
-   const validationError = validateBalance(balance);
-
-   if (validationError) {
-      showFeedback("error", validationError);
-      return;
-   }
-
-   setButtonLoading(true);
-
-   try {
-      const account = await createAccount(balance);
-      showFeedback("success", "Account created successfully.");
-      renderCreatedAccount(account);
-      form.reset();
-   } catch (error) {
-      showFeedback("error", getErrorMessage(error, "Account could not be created."));
-      console.error(error);
-   } finally {
-      setButtonLoading(false);
-   }
-}
-
-async function createAccount(balance) {
-   const response = await fetch(`${API_BASE_URL}${CREATE_ACCOUNT_ENDPOINT}`, {
-      method: "POST",
-      headers: {
-         "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ balans: balance })
-   });
-
-   const data = await response.json();
-
-   if (!response.ok) {
-      throw new Error(data.message || data.error || `Request failed: ${response.status}`);
-   }
-
-   return {
-      iban: data.iban,
-      balance: Number(data.balans ?? data.balance ?? 0),
-      message: data.message,
-   };
-}
-
-function renderCreatedAccount(account) {
-   createdAccount.innerHTML = `
-      <div class="data-card">
-         <div class="data-card__iban">${escapeHtml(account.iban)}</div>
-         <div class="data-card__balance">${formatCurrency(Number(account.balance ?? 0))}</div>
-         <div class="data-card__label">Initial balance</div>
-      </div>
-   `;
-}
-
-function validateBalance(balance) {
-   if (!Number.isFinite(balance)) {
-      return "Please enter an initial balance.";
-   }
-
-   if (balance < 0) {
-      return "Initial balance cannot be negative.";
-   }
-
-   if (balance > 9999999999999.99) {
-      return "Initial balance is too high.";
-   }
-
-   return "";
-}
-
-function formatBalanceInput() {
-   const balance = Number(balanceInput.value);
-
-   if (Number.isFinite(balance) && balance >= 0) {
-      balanceInput.value = balance.toFixed(2);
-   }
-}
+  try {
+    showFeedback("loading", "Creating account...");
+    const account = await createAccount(initialBalance);
+    result.innerHTML = `
+      <article class="account-card">
+        <strong>${escapeHtml(account.iban)}</strong>
+        <span>Balance: ${formatCurrency(account.balance)}</span>
+        <span>Available: ${formatCurrency(account.availableBalance)}</span>
+      </article>
+    `;
+    form.reset();
+    showFeedback("success", "Account created.");
+  } catch (error) {
+    showFeedback("error", error.message);
+  }
+});
 
 function showFeedback(type, message) {
-   feedbackBox.className = `feedback-box visible ${type}`;
-   feedbackText.textContent = message;
-}
-
-function setButtonLoading(isLoading) {
-   createButton.classList.toggle("loading", isLoading);
-   createButton.disabled = isLoading;
+  feedback.className = `feedback ${type}`;
+  feedback.textContent = message;
 }
 
 function formatCurrency(value) {
-   return new Intl.NumberFormat("nl-BE", {
-      style: "currency",
-      currency: "EUR"
-   }).format(value);
-}
-
-function getErrorMessage(error, fallback) {
-   return error && error.message ? error.message : fallback;
+  return new Intl.NumberFormat("nl-BE", {
+    style: "currency",
+    currency: "EUR",
+  }).format(Number(value) || 0);
 }
 
 function escapeHtml(value) {
-   return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }

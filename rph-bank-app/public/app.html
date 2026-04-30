@@ -2,150 +2,261 @@
 <html lang="en">
 
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>RPH — PingFin</title>
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPH Bank Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-   <!--CARD 1 — SEPA Payment Form -->
-   <div class="card">
-      <div class="img-logo">
-         <img alt="Logo" src="img/rph_logo.png">
-         <div class="top-actions">
-            <button class="btn-primary" type="button" onclick="window.location.href='create-account.html'">New Account</button>
-            <button class="btn-primary" id="log-out" type="button" onclick="window.location.href='index.html'">Log Out</button>
-         </div>
+  <header class="app-header">
+    <div class="brand">
+      <img src="img/rph_logo.png" alt="RPH logo">
+      <div>
+        <h1>RPH Banking</h1>
+        <p>PingFin regular bank dashboard</p>
       </div>
-      <div class="card-title">Banking App</div>
+    </div>
+    <nav class="top-actions">
+      <a class="button secondary" href="create-account.html">New Account</a>
+      <a class="button secondary" href="index.html">Log Out</a>
+    </nav>
+  </header>
 
-      <div class="field">
-         <label for="beneficiary-bank">Beneficiary's Bank:</label>
-         <div class="select-wrap bank-select-wrap">
-            <select id="beneficiary-bank" class="loading">
-               <!-- populated by main.js -->
-            </select>
-            <button class="bank-refresh-icon" id="btn-refresh-banks" type="button" aria-label="Refresh banks">
-               ↻
-            </button>
-         </div>
+  <main class="layout">
+    <section class="panel payment-panel">
+      <div class="panel-heading">
+        <h2>Create Payment Order</h2>
+        <button class="button secondary" id="refresh-all" type="button">Refresh All</button>
       </div>
 
-      <!-- Choose your Account — opties geladen via api.getAccounts() -->
-      <div class="field">
-         <label for="from-account">Choose your Account:</label>
-         <div class="select-wrap">
-            <select id="from-account" class="loading">
-               <!-- populated by main.js -->
-            </select>
-         </div>
-      </div>
+      <form id="payment-form" class="form-grid">
+        <label>
+          From account
+          <select id="from-account" required>
+            <option value="">Loading accounts...</option>
+          </select>
+        </label>
 
-      <!-- Amount -->
-      <div class="field">
-         <label for="amount">Enter amount (in EUR):</label>
-         <input type="number" id="amount" lang="en" placeholder="0.00" min="0.10" max="500" step="0.10">
-      </div>
+        <label>
+          Beneficiary bank
+          <select id="beneficiary-bic" required>
+            <option value="">Loading banks...</option>
+          </select>
+        </label>
 
-      <!-- Beneficiary IBAN -->
-      <div class="field">
-         <label for="iban">Enter beneficiary's IBAN:</label>
-         <input type="text" id="iban" placeholder="e.g. BE68639007547034" maxlength="16">
-      </div>
+        <label>
+          Beneficiary IBAN
+          <input id="beneficiary-iban" type="text" maxlength="16" placeholder="BE68639007547034" required>
+        </label>
 
-      <!-- Feedback (error / success) -->
-      <div class="feedback-box" id="feedback-box">
-         <div class="feedback-text"></div>
-      </div>
+        <label>
+          Amount
+          <input id="amount" type="number" min="0.01" max="500" step="0.01" placeholder="0.00" required>
+        </label>
 
-      <!-- Action buttons — exact volgorde van mockup -->
-      <div class="actions">
-         <button class="btn-primary" id="btn-send" type="button">Send Payment</button>
-         <button class="btn-primary" id="btn-fetch-acks" type="button">Fetch ACKs</button>
-         <button class="btn-primary" id="btn-random" type="button">Send 10 Random Orders</button>
-         <button class="btn-primary" id="btn-hide-data" type="button">Hide Data</button>
-         <button class="btn-primary" id="btn-hide-orders" type="button">Hide New Payment Orders</button>
-         <button class="btn-primary" id="btn-hide-members" type="button">Hide Banks</button>
-      </div>
-   </div>
+        <label class="full-width">
+          Message
+          <input id="message" type="text" minlength="5" value="SEPA payment" required>
+        </label>
 
-   <!-- ════════════════════════════════════
-       CARD 2 — Fetched Data (accounts)
-       Kaarten gegenereerd door main.js → api.getAccounts()
-       ════════════════════════════════════ -->
-   <div class="card" id="section-data">
-      <div class="section-header">
-         <span class="section-title">Fetched Data</span>
-         <span class="section-count" id="accounts-count">—</span>
-      </div>
+        <div class="actions full-width">
+          <button class="button" type="submit">Create Payment</button>
+          <button class="button secondary" id="send-payments" type="button">Send Payments</button>
+          <button class="button secondary" id="handle-payments" type="button">Handle Payments</button>
+          <button class="button secondary" id="send-acks" type="button">Send ACKs</button>
+          <button class="button secondary" id="handle-acks" type="button">Handle ACKs</button>
+          <button class="button secondary" id="refresh-banks" type="button">Refresh Banks</button>
+        </div>
+      </form>
 
-      <!-- data-card elementen worden hier ingevoegd door main.js -->
-      <div class="accounts-grid" id="accounts-grid">
-         <!-- skeleton zichtbaar tot data geladen is -->
-      </div>
-   </div>
+      <div id="feedback" class="feedback loading">Loading dashboard data...</div>
+    </section>
 
-   <!-- ════════════════════════════════════
-       CARD 3 — New Payment Orders
-       Rijen gegenereerd door main.js → api.getPaymentOrders()
-       ════════════════════════════════════ -->
-   <div class="card" id="section-orders">
-      <div class="section-header">
-         <span class="section-title">New Payment Orders</span>
-         <span class="section-count" id="orders-count">—</span>
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Accounts</h2>
+        <span id="accounts-count" class="count">0</span>
       </div>
+      <div id="accounts-grid" class="accounts-grid">
+        <p class="empty">Loading accounts...</p>
+      </div>
+    </section>
 
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Pending Payment Orders</h2>
+        <span id="pending-count" class="count">0</span>
+      </div>
       <div class="table-wrap">
-         <table>
-            <thead>
-               <tr>
-                  <th scope="col">id</th>
-                  <th scope="col">amount</th>
-                  <th scope="col">msg</th>
-                  <th scope="col">datetime</th>
-                  <th scope="col">po_id</th>
-                  <th scope="col">account_id</th>
-               </tr>
-            </thead>
-            <tbody id="orders-body">
-               <!-- rijen worden ingevoegd door main.js -->
-            </tbody>
-         </table>
+        <table>
+          <thead>
+            <tr>
+              <th>PO ID</th>
+              <th>Amount</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Originator</th>
+              <th>Beneficiary</th>
+              <th>OB code</th>
+              <th>BB code</th>
+            </tr>
+          </thead>
+          <tbody id="pending-body">
+            <tr><td colspan="8" class="empty">Loading pending payments...</td></tr>
+          </tbody>
+        </table>
       </div>
-   </div>
+    </section>
 
-   <!-- ════════════════════════════════════
-       CARD 4 — Banks
-       Rijen gegenereerd door main.js → api.getBanks()
-       ════════════════════════════════════ -->
-   <div class="card" id="section-members">
-      <div class="section-header">
-         <span class="section-title">Banks</span>
-         <span class="section-count" id="members-count">—</span>
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Outgoing Payments</h2>
+        <span id="outgoing-count" class="count">0</span>
       </div>
-
       <div class="table-wrap">
-         <table>
-            <thead>
-               <tr>
-                  <th scope="col">Bic</th>
-                  <th scope="col">Bank</th>
-               </tr>
-            </thead>
-            <tbody id="members-body">
-               <!-- rijen worden ingevoegd door main.js -->
-            </tbody>
-         </table>
+        <table>
+          <thead>
+            <tr>
+              <th>PO ID</th>
+              <th>Amount</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Originator</th>
+              <th>Beneficiary</th>
+              <th>OB code</th>
+              <th>BB code</th>
+            </tr>
+          </thead>
+          <tbody id="outgoing-body">
+            <tr><td colspan="8" class="empty">Loading outgoing payments...</td></tr>
+          </tbody>
+        </table>
       </div>
-   </div>
+    </section>
 
-   <footer>PingFin · IW2-G13 &copy; 2026</footer>
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Incoming Payments</h2>
+        <span id="incoming-count" class="count">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>PO ID</th>
+              <th>Amount</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Originator</th>
+              <th>Beneficiary</th>
+              <th>OB code</th>
+              <th>BB code</th>
+            </tr>
+          </thead>
+          <tbody id="incoming-body">
+            <tr><td colspan="8" class="empty">Loading incoming payments...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-   <script type="module" src="JS/main.js"></script>
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Banks</h2>
+        <span id="banks-count" class="count">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>BIC</th>
+              <th>Name</th>
+              <th>Members</th>
+            </tr>
+          </thead>
+          <tbody id="banks-body">
+            <tr><td colspan="3" class="empty">Loading banks...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Outgoing ACKs</h2>
+        <span id="ack-out-count" class="count">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>PO ID</th>
+              <th>Amount</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>OB code</th>
+              <th>CB code</th>
+              <th>BB code</th>
+            </tr>
+          </thead>
+          <tbody id="ack-out-body">
+            <tr><td colspan="7" class="empty">Loading outgoing ACKs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Incoming ACKs</h2>
+        <span id="ack-in-count" class="count">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>PO ID</th>
+              <th>Amount</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>OB code</th>
+              <th>CB code</th>
+              <th>BB code</th>
+            </tr>
+          </thead>
+          <tbody id="ack-in-body">
+            <tr><td colspan="7" class="empty">Loading incoming ACKs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Logs</h2>
+        <span id="logs-count" class="count">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Code</th>
+              <th>Message</th>
+              <th>PO ID</th>
+            </tr>
+          </thead>
+          <tbody id="logs-body">
+            <tr><td colspan="5" class="empty">Loading logs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="JS/main.js"></script>
 </body>
 
 </html>

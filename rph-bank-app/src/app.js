@@ -13,12 +13,17 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const port = 8070;
-
-app.use(express.json());
+const port = Number(process.env.PORT) || 8070;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const publicPath = path.join(__dirname, "..", "public");
+
+app.use(express.json());
+app.use(express.static(publicPath));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(publicPath, "index.html"));
+});
 
 const versionsPath = path.join(__dirname, "routes");
 const versions = await fs.readdir(versionsPath);

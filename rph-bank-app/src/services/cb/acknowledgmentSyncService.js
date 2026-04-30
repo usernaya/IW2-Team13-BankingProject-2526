@@ -6,7 +6,66 @@ import { Payment } from "../../models/payment.model.js";
 import { ApiError } from "../../utils/apiError.js";
 import { acknowledgmentBatchSchema } from "../../schemas/acknowledgment.schemas.js";
 import { LogTypes } from "../../codes/logTypes.js";
+import { ObCodes } from "../../codes/obCodes.js";
 import { formatDateTime } from "../../utils/formatDate.js";
+import IBAN from "iban";
+
+const FALLBACK_EXTERNAL_BIC = "UNKNBEBB";
+const FALLBACK_OWN_BIC = "BMPBBEBB";
+const FALLBACK_ACCOUNT_ID = "UNKNOWN";
+
+function hasValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function normalizeAmount(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0.01;
+}
+
+function normalizeRequired(value, fallback) {
+  return hasValue(value) ? value : fallback;
+}
+
+function normalizeBic(value, fallback) {
+  const bic = String(value ?? "").trim().toUpperCase();
+  return /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)
+    ? bic
+    : fallback;
+}
+
+function normalizeDatetimeOrFallback(value, fallback) {
+  const normalized = normalizeDatetime(value);
+  return normalized && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(normalized)
+    ? normalized
+    : fallback;
+}
+
+function resolveObCode(ack) {
+  const amount = Number(ack.po_amount);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return ObCodes.OB_NEGATIVE_AMOUNT.code;
+  }
+
+  if (amount > 500) {
+    return ObCodes.OB_AMOUNT_EXCEEDED.code;
+  }
+
+  if (normalizeBic(ack.ob_id, "") === "") {
+    return ObCodes.OB_INVALID_BIC.code;
+  }
+
+  if (!hasValue(ack.oa_id)) {
+    return ObCodes.OB_UNKNOWN_OA.code;
+  }
+
+  if (!IBAN.isValid(ack.oa_id)) {
+    return ObCodes.OB_INVALID_IBAN.code;
+  }
+
+  return ack.ob_code != null ? Number(ack.ob_code) : ObCodes.OB_OK.code;
+}
 
 const normalizeDatetime = (value) => {
   if (value == null || value === "") {
@@ -45,26 +104,34 @@ export async function handleIncomingAcknowledgments() {
 
   const normalizedAcks = (result.data || []).map((ack) => ({
     ...ack,
-    po_amount: ack.po_amount != null ? Number(ack.po_amount) : ack.po_amount,
-    ob_code: ack.ob_code != null ? Number(ack.ob_code) : ack.ob_code,
-    cb_code: ack.cb_code != null ? Number(ack.cb_code) : ack.cb_code,
+    po_id: normalizeRequired(
+      ack.po_id,
+      `INVALID:${process.env.BIC}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+    ),
+    po_amount: normalizeAmount(ack.po_amount),
+    ob_id: normalizeBic(ack.ob_id, FALLBACK_EXTERNAL_BIC),
+    oa_id: normalizeRequired(ack.oa_id, FALLBACK_ACCOUNT_ID),
+    ob_code: resolveObCode(ack),
+    cb_code: ack.cb_code != null ? Number(ack.cb_code) : ObCodes.OB_OK.code,
+    bb_id: normalizeBic(ack.bb_id, process.env.BIC || FALLBACK_OWN_BIC),
+    ba_id: normalizeRequired(ack.ba_id, FALLBACK_ACCOUNT_ID),
     bb_code: ack.bb_code != null ? Number(ack.bb_code) : ack.bb_code,
     po_datetime:
       ack.po_datetime == null || ack.po_datetime === ""
         ? now
-        : normalizeDatetime(ack.po_datetime),
+        : normalizeDatetimeOrFallback(ack.po_datetime, now),
     ob_datetime:
       ack.ob_datetime == null || ack.ob_datetime === ""
         ? now
-        : normalizeDatetime(ack.ob_datetime),
+        : normalizeDatetimeOrFallback(ack.ob_datetime, now),
     cb_datetime:
       ack.cb_datetime == null || ack.cb_datetime === ""
         ? now
-        : normalizeDatetime(ack.cb_datetime),
+        : normalizeDatetimeOrFallback(ack.cb_datetime, now),
     bb_datetime:
       ack.bb_datetime == null || ack.bb_datetime === ""
         ? now
-        : normalizeDatetime(ack.bb_datetime),
+        : normalizeDatetimeOrFallback(ack.bb_datetime, now),
     po_message: ack.po_message ?? "",
   }));
 
