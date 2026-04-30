@@ -97,6 +97,11 @@ export async function handleIncomingAcknowledgments() {
   }
 
   if (!Array.isArray(result.data) || result.data.length === 0) {
+    await Log.createEntry({
+      datetime: formatDateTime(new Date()),
+      message: LogTypes.DATA_POLL_EMPTY.message,
+      type: "DATA_POLL_EMPTY",
+    });
     return [];
   }
 

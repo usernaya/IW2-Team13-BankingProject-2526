@@ -96,24 +96,6 @@ export async function createNewPaymentOrder(req, res) {
 
   if (bb_id === bic) {
     await Account.transferMoney(oa_id, ba_id, po_amount, id);
-    await Log.createEntry({
-      datetime: date,
-      message: LogTypes.TX_SUCCESS.message,
-      type: "TX_SUCCESS",
-      code: LogTypes.TX_SUCCESS.code,
-      po_id: id,
-      po_amount,
-      po_message,
-      po_datetime: date,
-      ob_id: bic,
-      oa_id,
-      ob_code: LogTypes.TX_SUCCESS.code,
-      ob_datetime: date,
-      bb_id,
-      ba_id,
-      bb_code: LogTypes.TX_SUCCESS.code,
-      bb_datetime: date,
-    });
   } else {
     await Payment.createPoNew([
       [id, po_amount, po_message, date, bic, oa_id, bb_id, ba_id],

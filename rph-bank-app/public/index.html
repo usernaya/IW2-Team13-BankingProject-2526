@@ -10,23 +10,54 @@
 
 <body class="login-page">
   <main class="login-panel">
-    <img src="img/rph_logo.png" alt="RPH logo">
-    <h1>RPH Banking</h1>
-    <p>Use the demo credentials to open the dashboard.</p>
+    <section class="login-panel__brand">
+      <div>
+        <img src="img/rph_logo.png" alt="RPH logo">
+        <h1>RPH Banking</h1>
+      </div>
 
-    <form action="app.html" method="get" class="form-grid">
-      <label class="full-width">
-        ID
-        <input type="text" name="client-id" value="admin" pattern="admin" required>
-      </label>
+      <div class="login-metrics">
+        <div class="login-metric">
+          <strong>24/7</strong>
+          <span>Reliable</span>
+        </div>
+        <div class="login-metric">
+          <strong>Fully</strong>
+          <span>Professional</span>
+        </div>
+        <div class="login-metric">
+          <strong>100%</strong>
+          <span>Human</span>
+        </div>
+      </div>
+    </section>
 
-      <label class="full-width">
-        Password
-        <input type="password" name="password" value="1234" pattern="1234" required>
-      </label>
+    <section class="login-panel__form">
+      <div>
+        <h2>Log in</h2>
+        <p>Gebruik de demo-gegevens om het dashboard te openen.</p>
+      </div>
 
-      <button class="button full-width" type="submit">Log In</button>
-    </form>
+      <form action="app.html" method="get" class="form-grid">
+        <label class="full-width">
+          ID
+          <input type="text" name="client-id" value="admin" pattern="admin" required>
+        </label>
+
+        <label class="full-width">
+          Password
+          <input type="password" name="password" value="1234" pattern="1234" required>
+        </label>
+
+        <button class="button full-width" type="submit">Log In</button>
+      </form>
+
+      <div class="login-links">
+        <a href="app.html">Dashboard</a>
+        <a href="create-account.html">Create account</a>
+        <a href="overview.html">Overview</a>
+      </div>
+    </section>
   </main>
 </body>
 

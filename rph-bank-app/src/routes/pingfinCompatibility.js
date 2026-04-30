@@ -2,7 +2,9 @@ import express from "express";
 import IBAN from "iban";
 import { Account } from "../models/account.model.js";
 import { Acknowledgment } from "../models/acknowledgment.model.js";
+import { Log } from "../models/log.model.js";
 import { Payment } from "../models/payment.model.js";
+import { LogTypes } from "../codes/logTypes.js";
 
 const router = express.Router();
 
@@ -147,6 +149,23 @@ router.post("/po_in", async (req, res) => {
 
         if (!isAcceptedIban(po.ba_id)) {
             acknowledgment.bb_code = 2002;
+            await Log.createEntry({
+                datetime: now,
+                message: LogTypes.BB_VALIDATION_FAIL.message,
+                type: "BB_VALIDATION_FAIL",
+                po_id: po.po_id ?? null,
+                po_amount: Number(po.po_amount ?? 0),
+                po_message: po.po_message ?? null,
+                po_datetime: po.po_datetime ?? now,
+                ob_id: po.ob_id ?? null,
+                oa_id: po.oa_id ?? null,
+                ob_code: po.ob_code ?? null,
+                ob_datetime: po.ob_datetime ?? now,
+                bb_id: po.bb_id ?? process.env.BIC ?? null,
+                ba_id: po.ba_id ?? null,
+                bb_code: acknowledgment.bb_code,
+                bb_datetime: now,
+            });
         } else {
             const account = await Account.getFromIban(po.ba_id);
             acknowledgment.bb_code = account ? 2000 : 2001;
@@ -154,6 +173,43 @@ router.post("/po_in", async (req, res) => {
             if (account) {
                 await Payment.createPoIn(toPaymentInRow(po, acknowledgment.bb_code, acknowledgment.bb_datetime));
                 await Account.creditMoney(po.ba_id, Number(po.po_amount), po.po_id);
+                await Log.createEntry({
+                    datetime: now,
+                    message: LogTypes.PO_RECEIVED.message,
+                    type: "PO_RECEIVED",
+                    po_id: po.po_id ?? null,
+                    po_amount: Number(po.po_amount ?? 0),
+                    po_message: po.po_message ?? null,
+                    po_datetime: po.po_datetime ?? now,
+                    ob_id: po.ob_id ?? null,
+                    oa_id: po.oa_id ?? null,
+                    ob_code: po.ob_code ?? null,
+                    ob_datetime: po.ob_datetime ?? now,
+                    cb_code: po.cb_code ?? null,
+                    cb_datetime: po.cb_datetime ?? now,
+                    bb_id: po.bb_id ?? process.env.BIC ?? null,
+                    ba_id: po.ba_id ?? null,
+                    bb_code: acknowledgment.bb_code,
+                    bb_datetime: acknowledgment.bb_datetime,
+                });
+            } else {
+                await Log.createEntry({
+                    datetime: now,
+                    message: LogTypes.BB_VALIDATION_FAIL.message,
+                    type: "BB_VALIDATION_FAIL",
+                    po_id: po.po_id ?? null,
+                    po_amount: Number(po.po_amount ?? 0),
+                    po_message: po.po_message ?? null,
+                    po_datetime: po.po_datetime ?? now,
+                    ob_id: po.ob_id ?? null,
+                    oa_id: po.oa_id ?? null,
+                    ob_code: po.ob_code ?? null,
+                    ob_datetime: po.ob_datetime ?? now,
+                    bb_id: po.bb_id ?? process.env.BIC ?? null,
+                    ba_id: po.ba_id ?? null,
+                    bb_code: acknowledgment.bb_code,
+                    bb_datetime: now,
+                });
             }
         }
 
@@ -192,6 +248,26 @@ router.post("/ack_in", async (req, res) => {
         }
 
         await Acknowledgment.createIngoing(toAcknowledgmentRow(ack, po));
+
+        await Log.createEntry({
+            datetime: now,
+            message: LogTypes.ACK_RECEIVED.message,
+            type: "ACK_RECEIVED",
+            po_id: ack.po_id ?? null,
+            po_amount: Number(ack.po_amount ?? po?.po_amount ?? 0),
+            po_message: ack.po_message ?? po?.po_message ?? null,
+            po_datetime: ack.po_datetime ?? po?.po_datetime ?? now,
+            ob_id: ack.ob_id ?? po?.ob_id ?? null,
+            oa_id: ack.oa_id ?? po?.oa_id ?? null,
+            ob_code: ack.ob_code ?? po?.ob_code ?? null,
+            ob_datetime: ack.ob_datetime ?? po?.ob_datetime ?? now,
+            cb_code: ack.cb_code ?? null,
+            cb_datetime: ack.cb_datetime ?? now,
+            bb_id: ack.bb_id ?? po?.bb_id ?? process.env.BIC ?? null,
+            ba_id: ack.ba_id ?? po?.ba_id ?? null,
+            bb_code: ack.bb_code ?? null,
+            bb_datetime: ack.bb_datetime ?? now,
+        });
 
         if (po) {
             await Payment.removePoOutRecord(ack.po_id);

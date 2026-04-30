@@ -143,6 +143,23 @@ WHERE a.id = ?;
         isvalid: true,
         iscomplete: true,
       });
+
+      await Log.createEntry({
+        datetime: timestamp,
+        message: "Transaction successful",
+        type: "TX_SUCCESS",
+        po_id,
+        po_amount: amount,
+        po_datetime: timestamp,
+        ob_id: process.env.BIC || null,
+        oa_id: senderId,
+        ob_code: 4008,
+        ob_datetime: timestamp,
+        bb_id: process.env.BIC || null,
+        ba_id: receiverId,
+        bb_code: 4008,
+        bb_datetime: timestamp,
+      });
     } catch (err) {
       await connection.rollback();
       throw err;

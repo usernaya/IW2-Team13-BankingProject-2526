@@ -20,6 +20,10 @@ const state = {
   pendingPayments: [],
 };
 
+const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
+const tabJumpButtons = Array.from(document.querySelectorAll("[data-tab-jump]"));
+const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+
 const el = {
   feedback: document.querySelector("#feedback"),
   fromAccount: document.querySelector("#from-account"),
@@ -39,12 +43,51 @@ const el = {
   ackOutBody: document.querySelector("#ack-out-body"),
   logsCount: document.querySelector("#logs-count"),
   logsBody: document.querySelector("#logs-body"),
+  accountsCountHero: document.querySelector("#accounts-count-hero"),
+  banksCountHero: document.querySelector("#banks-count-hero"),
+  pendingCountHero: document.querySelector("#pending-count-hero"),
+  logsCountHero: document.querySelector("#logs-count-hero"),
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  bindTabs();
   bindEvents();
   loadDashboard();
 });
+
+function bindTabs() {
+  const initialTab = normalizeTab(location.hash.replace(/^#/, "") || "overview");
+  setActiveTab(initialTab, false);
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => setActiveTab(button.dataset.tab || "overview"));
+  });
+
+  tabJumpButtons.forEach((button) => {
+    button.addEventListener("click", () => setActiveTab(button.dataset.tabJump || "overview"));
+  });
+}
+
+function setActiveTab(tab, updateHash = true) {
+  const activeTab = normalizeTab(tab);
+
+  tabPanels.forEach((panel) => {
+    panel.hidden = panel.dataset.tabPanel !== activeTab;
+  });
+
+  tabButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.tab === activeTab);
+  });
+
+  if (updateHash) {
+    history.replaceState(null, "", `#${activeTab}`);
+  }
+}
+
+function normalizeTab(tab) {
+  const availableTabs = new Set(tabPanels.map((panel) => panel.dataset.tabPanel));
+  return availableTabs.has(tab) ? tab : "overview";
+}
 
 function bindEvents() {
   document.querySelector("#payment-form")?.addEventListener("submit", onCreatePayment);
@@ -68,6 +111,7 @@ async function loadDashboard() {
     loadLogs(),
   ]);
 
+  syncOverviewStats();
   showFeedback("success", "Dashboard loaded.");
 }
 
@@ -76,6 +120,7 @@ async function loadAccounts() {
     state.accounts = await getAccounts();
     renderAccountSelect();
     renderAccounts();
+    syncOverviewStats();
   } catch (error) {
     renderError(el.accountsGrid, "Accounts could not be loaded.", 1);
     showFeedback("error", error.message);
@@ -87,6 +132,7 @@ async function loadBanks(refresh) {
     state.banks = await getBanks(refresh);
     renderBankSelect();
     renderBanks();
+    syncOverviewStats();
   } catch (error) {
     renderError(el.banksBody, "Banks could not be loaded.", 3);
     showFeedback("error", error.message);
@@ -97,6 +143,7 @@ async function loadPendingPayments() {
   try {
     state.pendingPayments = await getPendingPayments();
     renderPayments(el.pendingBody, el.pendingCount, state.pendingPayments);
+    syncOverviewStats();
   } catch (error) {
     renderError(el.pendingBody, "Pending payments could not be loaded.", 8);
     showFeedback("error", error.message);
@@ -106,6 +153,7 @@ async function loadPendingPayments() {
 async function loadOutgoingPayments() {
   try {
     renderPayments(el.outgoingBody, el.outgoingCount, await getOutgoingPayments());
+    syncOverviewStats();
   } catch (error) {
     renderError(el.outgoingBody, "Outgoing payments could not be loaded.", 8);
     showFeedback("error", error.message);
@@ -120,6 +168,7 @@ async function loadAcknowledgments() {
 
   if (outgoing.status === "fulfilled") {
     renderAcks(el.ackOutBody, el.ackOutCount, outgoing.value);
+    syncOverviewStats();
   } else {
     renderError(el.ackOutBody, "Outgoing ACKs could not be loaded.", 7);
     showFeedback("error", outgoing.reason.message);
@@ -129,6 +178,7 @@ async function loadAcknowledgments() {
 async function loadLogs() {
   try {
     renderLogs(await getLogs());
+    syncOverviewStats();
   } catch (error) {
     renderError(el.logsBody, "Logs could not be loaded.", 5);
     showFeedback("error", error.message);
@@ -330,6 +380,24 @@ function emptyRow(message, colspan) {
 function showFeedback(type, message) {
   el.feedback.className = `feedback ${type}`;
   el.feedback.textContent = message;
+}
+
+function syncOverviewStats() {
+  if (el.accountsCountHero) {
+    el.accountsCountHero.textContent = state.accounts.length;
+  }
+
+  if (el.banksCountHero) {
+    el.banksCountHero.textContent = state.banks.length;
+  }
+
+  if (el.pendingCountHero) {
+    el.pendingCountHero.textContent = state.pendingPayments.length;
+  }
+
+  if (el.logsCountHero) {
+    el.logsCountHero.textContent = el.logsCount?.textContent || "0";
+  }
 }
 
 function formatCurrency(value) {
